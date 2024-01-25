@@ -1,0 +1,22 @@
+{
+  "name": "aps-acc-admin-tutorial",
+  "version": "1.0.0",
+  "description": "Autodesk Platform Services application built by following the ACC Admin tutorial from https://aps.autodesk.com/tutorials.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "autodesk-platform-services"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "cookie-session": "^1.4.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "request": "^2.88.2",
+    "forge-apis": "^0.9.9"
+  },
+  "devDependencies": {
+    "@types/forge-viewer": "^7.48.0"
+  }
+}
