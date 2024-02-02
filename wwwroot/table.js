@@ -133,7 +133,6 @@ export class CostTable {
         this.projectId = projectId;
     }
 
-    // draw the cost table based on the current data
     drawTable() {
         let columns = [];
         if (this.dataSet.length !== 0) {
@@ -156,7 +155,7 @@ export class CostTable {
             showToggle: false,
             showPaginationSwitch: true,
             pagination: true,
-            pageList: [5, 10, 25, 50, 100],
+            pageList: [5],
             pageSize: 5,
             pageNumber: 1,
             uniqueId: 'id',
@@ -167,10 +166,6 @@ export class CostTable {
             smartDisplay: true,
             columns: columns
         });
-
-        // $(this.tableId).bootstrapTable('refreshOptions', {
-        //     data: this.dataSet
-        // });
     };
 
 
@@ -208,6 +203,7 @@ export class CostTable {
                 })
                 continue;
             }
+
 
             // property in cost item enitity
             if (key === 'project') {
@@ -537,9 +533,7 @@ async function redrawTable(){
 
 }
 
-export async function loadModel( accountId, projectId ) {
-
-
+export async function loadTable( accountId, projectId ) {
     // create the cost table when project is selected.
     if (g_costTable == null) {
         g_costTable = new CostTable('#projectsTable', accountId, projectId );

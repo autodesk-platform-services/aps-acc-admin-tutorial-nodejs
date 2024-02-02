@@ -86,25 +86,25 @@
                 </div>
             </div>
         </div>
-        <div class="btn-group btn-lg">
-            <div style="padding-top: 10px;">
-                <div class="importInProgress" hidden>
-                    <div style="text-align: center;">
-                        <img src="res/Bars-1s-200px.svg" class="InProgressImg">
-                    </div>
-                </div>
-                <button class="btn btn-primary" id="exportCSV">
-                    <span class="glyphicon glyphicon-play"></span>Export
-                </button>
-                <div class="form-group" id="importACCInfo">
-                    <label for="inputFile"><h5>Please select the csv file to be imported(make sure follow the accordingly template csv file).</h5></label>
-                    <input type="file" class="form-control-file" id="inputFile">
-                </div>
-                <button class="btn btn-primary" id="importCSV">
-                    <span class="glyphicon glyphicon-play"></span>Import
-                </button>
+    </div>
+    <div id="function">
+        <div class="importInProgress" hidden>
+            <div style="text-align: center;">
+                <img src="res/Bars-1s-200px.svg" class="InProgressImg">
             </div>
         </div>
+        <center><button class="btn btn-primary" id="exportCSV">
+            Export<span class="glyphicon glyphicon-play"></span>
+        </button></center>
+        <br>
+        <br>
+        <div class="form-group" style="align-items: center;" id="importACCInfo">
+            <label for="inputFile">Please select the csv file.</label>
+            <input type="file" class="form-control-file" id="inputFile">
+        </div>
+        <center><button class="btn btn-primary" id="importCSV">
+            <span class="glyphicon glyphicon-play"></span>Import
+        </button></center>    
     </div>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>

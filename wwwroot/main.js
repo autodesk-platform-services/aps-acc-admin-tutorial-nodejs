@@ -1,4 +1,4 @@
-import { loadModel, initTable } from './table.js';
+import { loadTable, initTable } from './table.js';
 import { initTree } from './sidebar.js';
 
 const login = document.getElementById('login');
@@ -17,8 +17,7 @@ try {
                 document.body.removeChild(iframe);
             };
         }
-        // const viewer = await initViewer(document.getElementById('preview'));
-        initTree('#tree', (accountId, projectId) => loadModel(accountId, projectId));
+        initTree('#tree', (accountId, projectId) => loadTable(accountId, projectId));
         initTable();
     } else {
         login.innerText = 'Login';
