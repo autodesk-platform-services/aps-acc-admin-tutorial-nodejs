@@ -5,13 +5,22 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/x-icon" href="https://cdn.autodesk.io/favicon.ico">
-    <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.css">
     <link rel="stylesheet" href="https://unpkg.com/inspire-tree-dom@4.0.6/dist/inspire-tree-light.min.css">
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.15.5/dist/bootstrap-table.min.css">
-
-
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">    
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.22.2/dist/bootstrap-table.min.css">
     <link rel="stylesheet" href="/main.css">
+
+
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <script src="https://unpkg.com/inspire-tree@4.3.1/dist/inspire-tree.js"></script>
+    <script src="https://unpkg.com/inspire-tree-dom@4.0.6/dist/inspire-tree-dom.min.js"></script>    
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://unpkg.com/bootstrap-table@1.22.2/dist/bootstrap-table.min.js"></script>    
+    <script src="https://rawgit.com/michaelsogos/bootstrap-table-toolbar-buttons/master/src/bootstrap-table-toolbar-buttons.js"></script>
+    <script src="/main.js" type="module"></script>
+
 
     <title>Autodesk Platform Services: Hubs Browser</title>
 </head>
@@ -25,7 +34,7 @@
     <div id="sidebar">
         <div id="tree"></div>
     </div>
-    <div id="preview">
+    <div id="table">
         <ul class="nav nav-tabs" id="adminTableTabs">
             <li id="projectsTab" class="active"><a data-toggle="tab" href="#projects">PROJECTS</a>
             </li>
@@ -35,7 +44,6 @@
             </li>
         </ul>
         <div class="tab-content table-bordered" style="border-color:seashell;">
-
             <div id="projects" class="tab-pane fade in active">
                 <div class="clsInProgress" hidden>
                     <div style="text-align: center;">
@@ -51,15 +59,12 @@
                     </div>
                 </div>
             </div>
-
-
             <div id="project" class="tab-pane fade in">
                 <div class="clsInProgress" hidden>
                     <div style="text-align: center;">
                         <img src="res/Bars-1s-200px.svg" class="InProgressImg">
                     </div>
                 </div>
-
                 <div class="clsResult">
                     <div class="row ">
                         <div style="padding-left: 20px; padding-right: 20px; text-align: left;">
@@ -75,7 +80,6 @@
                         <img src="res/Bars-1s-200px.svg" class="InProgressImg">
                     </div>
                 </div>
-
                 <div class="clsResult">
                     <div class="row ">
                         <div style="padding-left: 20px; padding-right: 20px; text-align: left;">
@@ -87,34 +91,5 @@
             </div>
         </div>
     </div>
-    <div id="function">
-        <div class="importInProgress" hidden>
-            <div style="text-align: center;">
-                <img src="res/Bars-1s-200px.svg" class="InProgressImg">
-            </div>
-        </div>
-        <center><button class="btn btn-primary" id="exportCSV">
-            Export<span class="glyphicon glyphicon-play"></span>
-        </button></center>
-        <br>
-        <br>
-        <div class="form-group" style="align-items: center;" id="importACCInfo">
-            <label for="inputFile">Please select the csv file.</label>
-            <input type="file" class="form-control-file" id="inputFile">
-        </div>
-        <center><button class="btn btn-primary" id="importCSV">
-            <span class="glyphicon glyphicon-play"></span>Import
-        </button></center>    
-    </div>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>
-
-    <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
-    <script src="https://unpkg.com/inspire-tree@4.3.1/dist/inspire-tree.js"></script>
-    <script src="https://unpkg.com/inspire-tree-dom@4.0.6/dist/inspire-tree-dom.min.js"></script>
-    <script src="https://unpkg.com/bootstrap-table@1.15.5/dist/bootstrap-table.min.js"></script>
-    <script src="/main.js" type="module"></script>
 </body>
-
 </html>

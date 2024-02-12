@@ -67,14 +67,29 @@ service.getProjects = async (hubId, token) => {
 
 // ACC Admin APIs
 service.getAdminProjects = async (accountId, token) => {
-    const requestUrl = ACC_APIS.URL.PROJECTS_URL.format(accountId);
-    let projectsInfo = await apiClientCallAsync('GET', requestUrl, token);
-    if(projectsInfo && projectsInfo.body && projectsInfo.body.results ){
-        return projectsInfo.body.results;
-    }else
-        return null;
+
+    let allProjects = [];
+    let requestUrl = ACC_APIS.URL.PROJECTS_URL.format(accountId);
+
+    while(true){
+        let response = await apiClientCallAsync('GET', requestUrl, token);
+        allProjects = allProjects.concat(response.body.results);
+        requestUrl = response.body.pagination.nextUrl;
+        if( requestUrl == null )
+            break;
+    }
+    return allProjects;
 };
 
+
+service.createAdminProject = async (accountId, projectInfo, token) =>{
+    const requestUrl = ACC_APIS.URL.PROJECTS_URL.format(accountId);
+    let projectsInfo = await apiClientCallAsync('POST', requestUrl, token, projectInfo);
+    if(projectsInfo && projectsInfo.body ){
+        return projectsInfo.body;
+    }else
+        return null;
+}
 
 
 service.getProjectInfo = async (projectId, token) => {
@@ -97,6 +112,34 @@ service.getProjectUsers = async (projectId, token) => {
     }else
         return null;
 };
+
+
+service.addProjectAdmin = async (projectId, email, token) => {
+    const requestUrl = ACC_APIS.URL.PROJECT_USERS_URL.format(projectId);
+    const userBody = {
+        "email": email,
+        "products": [
+            {
+                "key": "projectAdministration",
+                "access": "administrator"
+            },
+            {
+                "key": "docs",
+                "access": "administrator"
+            }
+        ]
+    }
+    let user = await apiClientCallAsync('POST', requestUrl, token, userBody);
+    return user;
+}
+
+
+service.importProjectUsers = async (projectId, projectUsers, token) => {
+    const requestUrl = ACC_APIS.URL.PROJECT_IMPORT_USERS_URL.format(projectId);
+    let projectUsersRes = await apiClientCallAsync('POST', requestUrl, token, projectUsers);
+
+    return (projectUsersRes && projectUsersRes.statusCode == 202);
+}
 
 
 /////////////////////////////////////////////////////////////////////////////

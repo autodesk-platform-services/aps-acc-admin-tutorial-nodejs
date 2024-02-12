@@ -1,5 +1,7 @@
 const express = require('express');
-const { authRefreshMiddleware, getAdminProjects, getProjectInfo, getProjectUsers } = require('../services/aps.js');
+var bodyParser = require('body-parser');
+
+const { authRefreshMiddleware, getAdminProjects, getProjectInfo, getProjectUsers, createAdminProject, importProjectUsers, addProjectAdmin, getUserProfile } = require('../services/aps.js');
 
 let router = express.Router();
 
@@ -23,14 +25,49 @@ router.get('/api/admin/project', async function(req, res, next){
     }
 });
 
-router.get('/api/admin/project/users', async function(req, res, next){
+
+router.post('/api/admin/project', bodyParser.json(), async function (req, res, next) {
+    const accountId = req.body.accountId;
+    const projects = req.body.projectsData;
+    let projectsRes = [];
+    // wait here until all the projects are created.
+    await Promise.all(
+        projects.map(async (project) => {
+            try{
+                const projectInfo = await createAdminProject(accountId, project, req.internalOAuthToken.access_token);
+                projectsRes.push(projectInfo);
+                // add a project admin
+                const profile = await getUserProfile(req.internalOAuthToken);
+                await addProjectAdmin( projectInfo.id, profile.email, req.internalOAuthToken.access_token )
+
+            }catch(err){
+                console.warn("Failed to create project for: "+ project.name + "due to: "+ err.statusMessage )
+            }
+        })
+    )
+    res.json(projectsRes);
+});
+
+
+router.get('/api/admin/project/users', async function (req, res, next) {
     try {
         const users = await getProjectUsers(req.query.project_id, req.internalOAuthToken.access_token);
         res.json(users);
     } catch (err) {
         next(err);
     }
+});
 
-} );
+
+router.post('/api/admin/project/users', bodyParser.json(), async function (req, res, next) {
+    const projectId = req.body.projectId;
+    const users     = req.body.usersData;
+    try {
+        const usersRes = await importProjectUsers(projectId, users, req.internalOAuthToken.access_token);
+        res.json(usersRes);
+    } catch (err) {
+        next(err);
+    }
+});
 
 module.exports = router;

@@ -11,9 +11,10 @@ PORT = PORT || 8080;
 
 const ACC_APIS = {
     URL:{
-        PROJECTS_URL:       "https://developer.api.autodesk.com/construction/admin/v1/accounts/{0}/projects",
-        PROJECT_URL:        "https://developer.api.autodesk.com/construction/admin/v1/projects/{0}",
-        PROJECT_USERS_URL:  "https://developer.api.autodesk.com/construction/admin/v1/projects/{0}/users"
+        PROJECTS_URL:             "https://developer.api.autodesk.com/construction/admin/v1/accounts/{0}/projects",
+        PROJECT_URL:              "https://developer.api.autodesk.com/construction/admin/v1/projects/{0}",
+        PROJECT_USERS_URL:        "https://developer.api.autodesk.com/construction/admin/v1/projects/{0}/users",
+        PROJECT_IMPORT_USERS_URL: "https://developer.api.autodesk.com/construction/admin/v2/projects/{0}/users:import"
     }
 };
 
