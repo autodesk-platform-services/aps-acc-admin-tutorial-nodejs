@@ -9,7 +9,7 @@ router.use(authRefreshMiddleware);
 
 router.get('/api/admin/projects', async function(req, res, next){
     try {
-        const projects = await getAdminProjects( req.query.account_id, req.internalOAuthToken.access_token);
+        const projects = await getAdminProjects( req.query.accountId, req.internalOAuthToken.access_token);
         res.json(projects);
     } catch (err) {
         next(err);
@@ -18,7 +18,7 @@ router.get('/api/admin/projects', async function(req, res, next){
 
 router.get('/api/admin/project', async function(req, res, next){
     try {
-        const projectInfo = await getProjectInfo( req.query.project_id, req.internalOAuthToken.access_token);
+        const projectInfo = await getProjectInfo( req.query.projectId, req.internalOAuthToken.access_token);
         res.json(projectInfo);
     } catch (err) {
         next(err);
@@ -26,9 +26,9 @@ router.get('/api/admin/project', async function(req, res, next){
 });
 
 
-router.post('/api/admin/project', bodyParser.json(), async function (req, res, next) {
+router.post('/api/admin/projects', bodyParser.json(), async function (req, res, next) {
     const accountId = req.body.accountId;
-    const projects = req.body.projectsData;
+    const projects = req.body.data;
     let projectsRes = [];
     // wait here until all the projects are created.
     await Promise.all(
@@ -51,7 +51,7 @@ router.post('/api/admin/project', bodyParser.json(), async function (req, res, n
 
 router.get('/api/admin/project/users', async function (req, res, next) {
     try {
-        const users = await getProjectUsers(req.query.project_id, req.internalOAuthToken.access_token);
+        const users = await getProjectUsers(req.query.projectId, req.internalOAuthToken.access_token);
         res.json(users);
     } catch (err) {
         next(err);
@@ -61,7 +61,9 @@ router.get('/api/admin/project/users', async function (req, res, next) {
 
 router.post('/api/admin/project/users', bodyParser.json(), async function (req, res, next) {
     const projectId = req.body.projectId;
-    const users     = req.body.usersData;
+    const users = { 
+        'users': req.body.data 
+    };
     try {
         const usersRes = await importProjectUsers(projectId, users, req.internalOAuthToken.access_token);
         res.json(usersRes);

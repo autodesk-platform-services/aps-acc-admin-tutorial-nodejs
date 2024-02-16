@@ -2,71 +2,78 @@ var g_costTable = null;
 
 
 // Data type
-export const AdminDataType = {
+export const DataType = {
     PROJECT : 'project',
     USERS   : 'users',
     PROJECTS: 'projects',
   }
 
+
+const TypeInfo = {
+    'projects': {
+        'tableId' : '#projectsTable',
+        'exportUrl': '/api/admin/projects',
+        'importUrl': '/api/admin/projects'
+    },
+    'project': {
+        'tableId' : '#projectTable',
+        'exportUrl': '/api/admin/project',
+        'importUrl': '/api/admin/project'
+    },
+    'users': {
+        'tableId' : '#usersTable',
+        'exportUrl': '/api/admin/project/users',
+        'importUrl': '/api/admin/project/users'
+    }
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Cost Table class that manage the operation to the table
-export class ACCTable {
-    constructor(tableId, accountId, projectId, currentDataType = AdminDataType.PROJECT, dataSet = []) {
+//Table class wraps the specific data info
+export class Table {
+    constructor(tableId, accountId, projectId, type = DataType.PROJECT, dataSet = null) {
         this.tableId = tableId;
         this.accountId = accountId;
         this.projectId = projectId;
-        this.currentDataType = currentDataType;
+        this.type = type;
         this.dataSet = dataSet;
-        this.csvData = null;
-        this.importData = null;
+        this.csvDataToBeExported = null;
+        this.csvDataToBeImported = null;
     };
 
 
-    // get the required data for cost table
-    async fetchDataAsync() {
-        this.dataSet = [];
-        try {
-            let requestUrl = null;
-            let requetData = null;
 
-            switch (this.currentDataType) {
-                case AdminDataType.PROJECTS: {
-                    requestUrl = '/api/admin/projects';
-                    requetData = {
-                        'account_id': this.accountId
-                    };                          
-                    break;
-                }
-                case AdminDataType.PROJECT: {
-                    requestUrl = '/api/admin/project';
-                    requetData = {
-                        'project_id': this.projectId
-                    };
-                    break;
-                }
-                case AdminDataType.USERS: {
-                    requestUrl = '/api/admin/project/users';
-                    requetData = {
-                        'project_id': this.projectId
-                    };
-                    break;
-                }
-                default: {
-                    console.error("Data type is not set correctly!");
-                }
-            }   
-            if( requestUrl != null )
-                this.dataSet = await apiClientAsync(requestUrl, requetData);
+
+    resetDataInfo( type=null, accountId=null, projectId=null ){
+        this.accountId = accountId? accountId: this.accountId;
+        this.projectId = accountId||projectId? projectId: this.projectId;
+        this.type = type? type: this.type;
+        this.tableId = TypeInfo[this.type].tableId;
+        this.dataSet = null;
+        this.csvDataToBeExported = null;
+        this.csvDataToBeImported = null;
+    }
+
+    // get the required data based on current data type
+    async fetchDataAsync() {
+        const url = TypeInfo[this.type].exportUrl;
+        const data = {
+            'accountId': this.accountId,
+            'projectId': this.projectId
+        }
+        try {
+            this.dataSet = await apiClientAsync(url, data);
         } catch (err) {
-            console.log(err);
+            console.error(err);
         }
     };
 
-
-    // prepare|customize the data to be displayed in the cost table
-    async polishDataAsync() {
-        if (this.dataSet.length === 0)
+    // polish the data
+    polishData() {
+        if (this.dataSet == null){
+            console.warn('No dataSet, please fetch data first.');
             return;
+        }
 
         for (var key in this.dataSet[0]) {
             if (Array.isArray(this.dataSet[0][key]) || typeof this.dataSet[0][key] === 'object' && this.dataSet[0][key] != null) {
@@ -78,54 +85,149 @@ export class ACCTable {
     };
 
 
-  
-    // get current cost data type 
-    get CurrentDataType() {
-        return this.currentDataType;
-    }
 
-    // set current cost data type
-    set CurrentDataType(dataType = AdminDataType.PROJECT) {
-        this.currentDataType = dataType;
-        switch (this.currentDataType) {
-            case AdminDataType.PROJECTS:{
-                this.tableId = '#projectsTable';
-                break;
-            }
-            case AdminDataType.PROJECT: {
-                this.tableId = '#projectTable';
-                break;
-            }
-            case AdminDataType.USERS: {
-                this.tableId = '#usersTable';
-                break;
-            }
-            default:{
-                console.error("Data Type is not set correctly.");
-            }
+    // protected: get the data cached to be exported to CSV later
+    generateCSVData() {
+        if(this.dataSet==null || this.dataSet.length==0){
+            console.warn('DataSet is not ready, please fetch your data first.');
+            return;
         }
+
+        this.csvDataToBeExported = [];
+        let csvHeader = [];
+
+        // Set the header of CSV
+        for (let key in this.dataSet[0]) {
+            csvHeader.push(key);
+        }
+        this.csvDataToBeExported.push(csvHeader);
+
+        // Set the row data of CSV
+        this.dataSet.forEach((row) => {
+            let csvRowTmp = [];
+            for (let key in row) {
+                if (typeof row[key] === 'string')
+                    csvRowTmp.push("\"" + row[key].replace(/\"/g, "\"\"").replace("#", "") + "\"")
+                else
+                    csvRowTmp.push(row[key]);
+            }
+            this.csvDataToBeExported.push(csvRowTmp);
+        })
     };
 
-    // current table id
-    set CurrentTableId(newTableId) {
-        this.tableId = newTableId;
-    };
 
-    setProjectId(accountId, projectId){
-        this.accountId = accountId;
-        this.projectId = projectId;
+
+
+    // export data in cost table to CSV file
+    exportCSV() {
+        if(this.csvDataToBeExported ==null){
+            console.warn('CSV data is not ready, please generate the CSV data first');
+            return;
+        }
+        let csvString = this.csvDataToBeExported.join("%0A");
+        let a = document.createElement('a');
+        a.href = 'data:attachment/csv,' + csvString;
+        a.target = '_blank';
+        a.download = this.type + (new Date()).getTime() + '.csv';
+        document.body.appendChild(a);
+        a.click();
     }
+
+
+
+
+    parseCSVData( csvInputData ){
+        if( csvInputData == null ){
+            console.warn('The input csv file is not ready, please provide correct csv data.');
+            return;
+        }
+        const rows = csvInputData.split("\r\n");
+        const keys = rows[0].split(',');
+        this.csvDataToBeImported = [];
+        for (var i = 1; i < rows.length; i++) {
+            var jsonData = {};
+            var cells = rows[i].split(",");
+            for (var j = 0; j < cells.length; j++) {
+                if (cells[j] == null || cells[j] == '')
+                    continue
+
+                let key = keys[j];
+                // special handle with some keys
+                switch (this.type) {
+                    case DataType.PROJECTS:
+                        if (key == 'template') {
+                            jsonData[key] = { 'projectId': cells[j] };
+                            continue;
+                        }
+                        break;
+                    case DataType.PROJECT:
+                    case DataType.USERS:
+                        const params = key.split('.')
+                        const length = params.length;
+                        if (length == 2 && params[0] == 'products') {
+                            let productAccess = {
+                                "key": params[length - 1],
+                                "access": cells[j]
+                            }
+                            if (jsonData["products"] == null) {
+                                jsonData["products"] = [];
+                            }
+                            jsonData["products"].push(productAccess)
+                            continue
+                        }
+                        break;
+
+                    default:
+                        console.warn("The current Admin Data Type is not expected");
+                        break;
+                }
+                jsonData[key] = cells[j];
+            }
+            this.csvDataToBeImported.push(jsonData);
+        }
+    }
+
+
+    // protected: import projects or project users
+    async importCSVDataAsync() {
+        if (this.csvDataToBeImported == null) {
+            console.warn('The CSV data to be imported is not ready, please parse the input CSV data first');
+            return;
+        }
+        const data = {
+            'accountId': this.accountId,
+            'projectId': this.projectId,
+            'data': this.csvDataToBeImported
+        }
+        const url = TypeInfo[this.type].importUrl;
+        try {
+            return await apiClientAsync(url, data, 'post');
+        } catch (err) {
+            console.error(err);
+            return false;
+        }
+    }
+    
+
+    async prepareDataAsync(){
+        await this.fetchDataAsync();
+        this.polishData();
+        this.generateCSVData();
+    }
+
 
     drawTable() {
+        if(this.dataSet==null || this.dataSet.length==0){
+            console.warn('DataSet is not ready, please fetch your data first.');
+            return;
+        }
         let columns = [];
-        if (this.dataSet.length !== 0) {
-            for (var key in this.dataSet[0]) {
-                columns.push({
-                    field: key,
-                    title: key,
-                    align: "center"
-                })
-            }
+        for (var key in this.dataSet[0]) {
+            columns.push({
+                field: key,
+                title: key,
+                align: "center"
+            })
         }
         $(this.tableId).bootstrapTable('destroy');
         $(this.tableId).bootstrapTable({
@@ -163,122 +265,22 @@ export class ACCTable {
     };
 
 
-    // export data in cost table to CSV file
-    exportCSV() {
-        let csvString = this.csvData.join("%0A");
-        let a = document.createElement('a');
-        a.href = 'data:attachment/csv,' + csvString;
-        a.target = '_blank';
-        a.download = this.currentDataType + (new Date()).getTime() + '.csv';
-        document.body.appendChild(a);
-        a.click();
-    }
-
-
-
-
-    // protected: get the data cached to be exported to CSV later
-    prepareCSVData() {
-        this.csvData = [];
-        let csvHeader = [];
-
-        // Set the header of CSV
-        for (let key in this.dataSet[0]) {
-            csvHeader.push(key);
-        }
-        this.csvData.push(csvHeader);
-
-        // Set the row data of CSV
-        this.dataSet.forEach((item) => {
-            let csvRowTmp = [];
-            for (let key in item) {
-                if (typeof item[key] === 'string')
-                    csvRowTmp.push("\"" + item[key].replace(/\"/g, "\"\"").replace("#", "") + "\"")
-                else
-                    csvRowTmp.push(item[key]);
-            }
-            this.csvData.push(csvRowTmp);
-        })
-    };
-
-    prepareInputData(){
-
-    }
-
-
-    // protected: import projects or project users
-    async importACCInfo(requestData) {
-
-        let requestUrl = null;
-        let requestBody = null;
-        try {
-
-        switch (this.currentDataType){
-            case AdminDataType.PROJECTS:
-                requestUrl = '/api/admin/project';
-                requestBody = {
-                    'accountId': this.accountId,
-                    'projectsData': requestData
-                };
-                break;
-
-            case AdminDataType.PROJECT:
-            case AdminDataType.USERS:
-                requestUrl = '/api/admin/project/users';
-                requestBody = {
-                    'projectId': this.projectId,
-                    'usersData': { 'users': requestData}
-                };
-                break; 
-                default:
-                    console.warn('Current Admin Data Type is not expected.')
-                    return false;
-        }
-
-            return await apiClientAsync(requestUrl, requestBody, 'post');
-        } catch (err) {
-            console.error(err);
-            return fasle;
-        }
-    }
-
 }
 
 
-
-async function redrawTable(){
-
+export async function refreshTableAsync( accountId = null, projectId=null ) {
     if (g_costTable == null) {
-        console.error("The table has to be created!");
-        return;
+        g_costTable = new Table('#projectsTable', accountId, projectId );
     }
 
     $('.clsInProgress').show();
     $('.clsResult').hide();
 
-    try {
-        await g_costTable.fetchDataAsync();
-        await g_costTable.polishDataAsync();
-        g_costTable.prepareCSVData();
-        g_costTable.drawTable();
-    } catch (err) {
-        console.log(err);
-    }
-
-    $('.clsInProgress').hide();
-    $('.clsResult').show();
-
-
-}
-
-export async function loadTable( accountId, projectId ) {
-    if (g_costTable == null) {
-        g_costTable = new ACCTable('#projectsTable', accountId, projectId );
-    }else{
-        g_costTable.setProjectId( accountId, projectId);
-    }
-
-    if (projectId == null) {
+    const activeTab = $("ul#adminTableTabs li.active").children()[0].hash.replace('#','');
+    g_costTable.resetDataInfo( activeTab, accountId, projectId );
+    
+    
+    if (g_costTable.projectId == null) {
         $("#projectsTab").addClass("active");
         $("#projectsTab").removeClass("hidden")
         $("#projects").addClass("active")
@@ -306,59 +308,44 @@ export async function loadTable( accountId, projectId ) {
 
     } 
 
-    // get the active tab
-    const activeTab = $("ul#adminTableTabs li.active").children()[0].hash;
-    switch (activeTab) {
-        case '#projects': {
-            g_costTable.CurrentDataType = AdminDataType.PROJECTS;
-            break;
-        }
-        case '#project': {
-            g_costTable.CurrentDataType = AdminDataType.PROJECT;
-            break;
-        }
-        case '#users': {
-            g_costTable.CurrentDataType = AdminDataType.USERS;
-            break;
-        }
-        default:{
-            console.error("current active tab is not expected, please check!");
-        }
-    }
+    await g_costTable.prepareDataAsync();
 
-    await redrawTable();
+    
+    g_costTable.drawTable();
+
+    $('.clsInProgress').hide();
+    $('.clsResult').show();
+
 
 }
 
-export function initTable(){
+export async function initApp(){
     $('a[data-toggle="tab"]').on('shown.bs.tab', async function (e) {
         if (g_costTable == null) {
-            console.error("The table has to be created!");
+            console.warn("The table is not ready, please create the table first!");
             return;
         }
 
-        switch( e.target.hash ){
-            case '#projects':{
-                g_costTable.CurrentDataType = AdminDataType.PROJECTS;
-                break;
-            }
-            case '#project':{
-                g_costTable.CurrentDataType = AdminDataType.PROJECT;
-                break;
-            }
-            case '#users':{
-                g_costTable.CurrentDataType = AdminDataType.USERS;
-                break;
-            }
+        $('.clsInProgress').show();
+        $('.clsResult').hide();
+    
+        try {
+            const dataType = e.target.hash.replace('#','');
+            g_costTable.resetDataInfo(dataType);
+            await g_costTable.prepareDataAsync()
+            g_costTable.drawTable();
+        } catch (err) {
+            console.log(err);
         }
-        await redrawTable();
-
+    
+        $('.clsInProgress').hide();
+        $('.clsResult').show();
     });  
 }
 
 
 function exportData() {
-    if (!g_costTable || !g_costTable.csvData) {
+    if (!g_costTable || !g_costTable.csvDataToBeExported) {
         alert('Please get the data first.')
         return;
     }
@@ -382,58 +369,20 @@ function importData() {
                         alert('please select one collection!');
                         return;
                     }
-
-                    var rows = e.target.result.split("\r\n");
-                    const keys = rows[0].split(',');
-                    var jsonArray = [];
-                    for (var i = 1; i < rows.length; i++) {
-                        var jsonData = {};
-                        var cells = rows[i].split(",");
-                        for (var j = 0; j < cells.length; j++) {
-                            if (cells[j] == null || cells[j] == '')
-                                continue
-
-                            let key = keys[j];
-                            // special handle with some keys
-                            switch (g_costTable.CurrentDataType) {
-                                case AdminDataType.PROJECTS:
-                                    if (key == 'template') {
-                                        jsonData[key] = { 'projectId': cells[j] };
-                                        continue;
-                                    }
-                                    break;
-                                case AdminDataType.PROJECT:
-                                case AdminDataType.USERS:
-                                    const params = key.split('.')
-                                    const length = params.length;
-                                    if (length == 2 && params[0] == 'products') {
-                                        let productAccess = {
-                                            "key": params[length - 1],
-                                            "access": cells[j]
-                                        }
-                                        if (jsonData["products"] == null) {
-                                            jsonData["products"] = [];
-                                        }
-                                        jsonData["products"].push(productAccess)
-                                        continue
-                                    }
-                                    break;
-
-                                default:
-                                    console.warn("The current Admin Data Type is not expected");
-                                    break;
-                            }
-                            jsonData[key] = cells[j];
-                        }
-                        jsonArray.push(jsonData);
-                    }
+                    $('.clsInProgress').show();
+                    $('.clsResult').hide();
                     try {
-                        await g_costTable.importACCInfo(jsonArray);
+                        g_costTable.parseCSVData(e.target.result);
+                        await g_costTable.importCSVDataAsync();
+                        await g_costTable.prepareDataAsync();
+                        g_costTable.drawTable();
                     } catch (err) {
                         console.log(err);
                     }
 
-                    await redrawTable();
+                    $('.clsInProgress').hide();
+                    $('.clsResult').show();
+
                 }
                 reader.readAsText(fileUpload[0]);
             } else {

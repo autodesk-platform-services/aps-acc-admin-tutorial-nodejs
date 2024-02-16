@@ -1,4 +1,4 @@
-import { loadTable, initTable } from './table.js';
+import { refreshTableAsync, initApp } from './table.js';
 import { initTree } from './sidebar.js';
 
 const login = document.getElementById('login');
@@ -17,8 +17,8 @@ try {
                 document.body.removeChild(iframe);
             };
         }
-        initTree('#tree', (accountId, projectId) => loadTable(accountId, projectId));
-        initTable();
+        initTree('#tree', (accountId, projectId) => refreshTableAsync(accountId, projectId));
+        await initApp();
     } else {
         login.innerText = 'Login';
         login.onclick = () => window.location.replace('/api/auth/login');
