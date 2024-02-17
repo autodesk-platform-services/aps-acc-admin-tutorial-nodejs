@@ -1,5 +1,5 @@
 const APS = require('forge-apis');
-const { apiClientCallAsync } = require('./common.js');
+const axios = require('axios');
 
 const { APS_CLIENT_ID, APS_CLIENT_SECRET, APS_CALLBACK_URL, INTERNAL_TOKEN_SCOPES, PUBLIC_TOKEN_SCOPES, ACC_APIS } = require('../config.js');
 
@@ -66,55 +66,44 @@ service.getProjects = async (hubId, token) => {
 
 //////////////////////////////////////////////////////////////////////////////////////
 // ACC Admin APIs
-service.getAdminProjects = async (accountId, token) => {
+service.getProjectsACC = async (accountId, token) => {
 
     let allProjects = [];
     let requestUrl = ACC_APIS.URL.PROJECTS_URL.format(accountId);
-
-    while(true){
-        let response = await apiClientCallAsync('GET', requestUrl, token);
-        allProjects = allProjects.concat(response.body.results);
-        requestUrl = response.body.pagination.nextUrl;
-        if( requestUrl == null )
-            break;
+    while (requestUrl) {
+        const response = await axios.get(requestUrl, { headers: { 'Authorization': 'Bearer ' + token } });
+        allProjects = allProjects.concat(response.data.results);
+        requestUrl = response.data.pagination.nextUrl;
     }
     return allProjects;
 };
 
-
-service.createAdminProject = async (accountId, projectInfo, token) =>{
+service.createProjectACC = async (accountId, projectInfo, token) =>{
     const requestUrl = ACC_APIS.URL.PROJECTS_URL.format(accountId);
-    let projectsInfo = await apiClientCallAsync('POST', requestUrl, token, projectInfo);
-    if(projectsInfo && projectsInfo.body ){
-        return projectsInfo.body;
-    }else
-        return null;
+    const response = await axios.post(requestUrl, projectInfo, { headers: { 'Authorization': 'Bearer ' + token } });
+    return response.data;
 }
 
-
-service.getProjectInfo = async (projectId, token) => {
+service.getProjectACC = async (projectId, token) => {
     const requestUrl = ACC_APIS.URL.PROJECT_URL.format(projectId);
-    let projectInfo = await apiClientCallAsync('GET', requestUrl, token);
-    if(projectInfo && projectInfo.body ){
-        let projectsList = [];
-        projectsList.push( projectInfo.body);
-        return projectsList;
-    }else
-        return null;
+    let projectsList = [];
+    const response = await axios.get(requestUrl, { headers: { 'Authorization': 'Bearer ' + token } });
+    projectsList.push(response.data);
+    return projectsList;
 };
 
-service.getProjectUsers = async (projectId, token) => {
-    const requestUrl = ACC_APIS.URL.PROJECT_USERS_URL.format(projectId);
-    let projectUsersInfo = await apiClientCallAsync('GET', requestUrl, token);
-
-    if(projectUsersInfo && projectUsersInfo.body && projectUsersInfo.body.results ){
-        return projectUsersInfo.body.results;
-    }else
-        return null;
+service.getProjectUsersACC = async (projectId, token) => {
+    let requestUrl = ACC_APIS.URL.PROJECT_USERS_URL.format(projectId);
+    let allUsers = [];
+    while (requestUrl) {
+        const response = await axios.get(requestUrl, { headers: { 'Authorization': 'Bearer ' + token } });
+        allUsers = allUsers.concat(response.data.results);
+        requestUrl = response.data.pagination.nextUrl;
+    }
+    return allUsers;
 };
 
-
-service.addProjectAdmin = async (projectId, email, token) => {
+service.addProjectAdminACC = async (projectId, email, token) => {
     const requestUrl = ACC_APIS.URL.PROJECT_USERS_URL.format(projectId);
     const userBody = {
         "email": email,
@@ -129,15 +118,27 @@ service.addProjectAdmin = async (projectId, email, token) => {
             }
         ]
     }
-    let user = await apiClientCallAsync('POST', requestUrl, token, userBody);
-    return user;
+    const response = await axios.post(requestUrl, userBody, { headers: { 'Authorization': 'Bearer ' + token } });
+    return response.data;
 }
 
-
-service.importProjectUsers = async (projectId, projectUsers, token) => {
+service.importProjectUsersACC = async (projectId, projectUsers, token) => {
     const requestUrl = ACC_APIS.URL.PROJECT_IMPORT_USERS_URL.format(projectId);
-    let projectUsersRes = await apiClientCallAsync('POST', requestUrl, token, projectUsers);
-
-    return (projectUsersRes && projectUsersRes.statusCode == 202);
+    let response = await axios.post( requestUrl, projectUsers, { headers: { 'Authorization': 'Bearer ' + token } });
+    return response.data;
 }
 
+
+/////////////////////////////////////////////////////////////////////////////
+// Add String.format() method if it's not existing
+if (!String.prototype.format) {
+    String.prototype.format = function () {
+        var args = arguments;
+        return this.replace(/{(\d+)}/g, function (match, number) {
+            return typeof args[number] != 'undefined'
+                ? args[number]
+                : match
+                ;
+        });
+    };
+}

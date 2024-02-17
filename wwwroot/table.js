@@ -62,7 +62,8 @@ export class Table {
             'projectId': this.projectId
         }
         try {
-            this.dataSet = await apiClientAsync(url, data);
+            const response = await axios.get(url, { params: data } );
+            this.dataSet = response.data;
         } catch (err) {
             console.error(err);
         }
@@ -144,8 +145,8 @@ export class Table {
         const rows = csvInputData.split("\r\n");
         const keys = rows[0].split(',');
         this.csvDataToBeImported = [];
-        for (var i = 1; i < rows.length; i++) {
-            var jsonData = {};
+        for (let i = 1; i < rows.length; i++) {
+            let jsonData = {};
             var cells = rows[i].split(",");
             for (var j = 0; j < cells.length; j++) {
                 if (cells[j] == null || cells[j] == '')
@@ -200,24 +201,24 @@ export class Table {
             'data': this.csvDataToBeImported
         }
         const url = TypeInfo[this.type].importUrl;
+        let response = null;
         try {
-            return await apiClientAsync(url, data, 'post');
+            response = await axios.post(url, data );
         } catch (err) {
             console.error(err);
-            return false;
         }
+        return response?response.data : null;
     }
     
-
     async prepareDataAsync(){
         await this.fetchDataAsync();
         this.polishData();
         this.generateCSVData();
     }
 
-
+    
     drawTable() {
-        if(this.dataSet==null || this.dataSet.length==0){
+        if(this.dataSet==null){
             console.warn('DataSet is not ready, please fetch your data first.');
             return;
         }
@@ -346,7 +347,7 @@ export async function initApp(){
 
 function exportData() {
     if (!g_costTable || !g_costTable.csvDataToBeExported) {
-        alert('Please get the data first.')
+        alert('The CSV data is not ready, please generate the data first.')
         return;
     }
     g_costTable.exportCSV();
@@ -394,30 +395,3 @@ function importData() {
     };
     input.click();
 }
-
-
-// helper function for Request
-function apiClientAsync( requestUrl, requestData=null, requestMethod='get' ) {
-    let def = $.Deferred();
-  
-    if( requestMethod == 'post' ){
-      requestData = JSON.stringify(requestData);
-    }
-  
-    jQuery.ajax({
-      url: requestUrl,
-      contentType: 'application/json',
-      type: requestMethod,
-      dataType: 'json',
-      data: requestData,
-      success: function (res) {
-        def.resolve(res);
-      },
-      error: function (err) {
-        console.error('request failed:');
-        def.reject(err)
-      }
-    });
-    return def.promise();
-  }
-  
