@@ -10,8 +10,6 @@
     <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.22.2/dist/bootstrap-table.min.css">
     <link rel="stylesheet" href="/main.css">
 
-
-
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
     <script src="https://unpkg.com/inspire-tree@4.3.1/dist/inspire-tree.js"></script>
@@ -36,59 +34,15 @@
         <div id="tree"></div>
     </div>
     <div id="table">
-        <ul class="nav nav-tabs" id="adminTableTabs">
-            <li id="projectsTab" class="active"><a data-toggle="tab" href="#projects">PROJECTS</a>
-            </li>
-            <li id="projectTab" class="hidden"><a data-toggle="tab" href="#project">PROJECT</a>
-            </li>
-            <li id="usersTab" class="hidden"><a data-toggle="tab" href="#users">USERS</a>
-            </li>
+        <ul id="adminTableTabs" class="nav nav-tabs">
         </ul>
-        <div class="tab-content table-bordered" style="border-color:seashell;">
-            <div id="projects" class="tab-pane fade in active">
-                <div class="clsInProgress" hidden>
-                    <div style="text-align: center;">
-                        <img src="res/Bars-1s-200px.svg" class="InProgressImg">
-                    </div>
-                </div>
-                <div class="clsResult">
-                    <div class="row ">
-                        <div style="padding-left: 20px; padding-right: 20px; text-align: left;">
-                            <table class="table table-striped table-bordered table-hover" id="projectsTable">
-                            </table>
-                        </div>
-                    </div>
-                </div>
+        <div id="acc_table_holder">
+            <div class="clsInProgress" style="text-align: center;" hidden>
+                <img src="res/Bars-1s-200px.svg">
             </div>
-            <div id="project" class="tab-pane fade in">
-                <div class="clsInProgress" hidden>
-                    <div style="text-align: center;">
-                        <img src="res/Bars-1s-200px.svg" class="InProgressImg">
-                    </div>
-                </div>
-                <div class="clsResult">
-                    <div class="row ">
-                        <div style="padding-left: 20px; padding-right: 20px; text-align: left;">
-                            <table class="table table-striped table-bordered table-hover" id="projectTable">
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div id="users" class="tab-pane fade in">
-                <div class="clsInProgress" hidden>
-                    <div style="text-align: center;">
-                        <img src="res/Bars-1s-200px.svg" class="InProgressImg">
-                    </div>
-                </div>
-                <div class="clsResult">
-                    <div class="row ">
-                        <div style="padding-left: 20px; padding-right: 20px; text-align: left;">
-                            <table class="table table-striped table-bordered table-hover" id="usersTable">
-                            </table>
-                        </div>
-                    </div>
-                </div>
+            <div class="clsResult">
+                <table id="acc_table">
+                </table>
             </div>
         </div>
     </div>

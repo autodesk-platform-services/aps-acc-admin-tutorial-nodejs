@@ -1,29 +1,24 @@
-var g_costTable = null;
-
-
-// Data type
-export const DataType = {
-    PROJECT : 'project',
-    USERS   : 'users',
-    PROJECTS: 'projects',
-  }
-
-
-const TypeInfo = {
+const TableTabs = {
     'projects': {
-        'tableId' : '#projectsTable',
         'exportUrl': '/api/admin/projects',
-        'importUrl': '/api/admin/projects'
+        'importUrl': '/api/admin/projects',
+        'tabName': 'PROJECTS',
+        'dataType': 'hub',
+        'default': true
     },
     'project': {
-        'tableId' : '#projectTable',
         'exportUrl': '/api/admin/project',
-        'importUrl': '/api/admin/project'
+        'importUrl': '/api/admin/project',
+        'tabName': 'PROJECT',
+        'dataType': 'project',
+        'default': true
     },
     'users': {
-        'tableId' : '#usersTable',
         'exportUrl': '/api/admin/project/users',
-        'importUrl': '/api/admin/project/users'
+        'importUrl': '/api/admin/project/users',
+        'tabName': 'USERS',
+        'dataType': 'project',
+        'default': false
     }
 }
 
@@ -31,11 +26,11 @@ const TypeInfo = {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Table class wraps the specific data info
 export class Table {
-    constructor(tableId, accountId, projectId, type = DataType.PROJECT, dataSet = null) {
+    constructor(tableId, accountId = null, projectId = null, tabKey = 'projects', dataSet = null) {
         this.tableId = tableId;
         this.accountId = accountId;
         this.projectId = projectId;
-        this.type = type;
+        this.tabKey = tabKey;
         this.dataSet = dataSet;
         this.csvDataToBeExported = null;
         this.csvDataToBeImported = null;
@@ -44,19 +39,18 @@ export class Table {
 
 
 
-    resetDataInfo( type=null, accountId=null, projectId=null ){
+    resetDataInfo( tabKey=null, accountId=null, projectId=null ){
+        this.tabKey = tabKey? tabKey: this.tabKey;
         this.accountId = accountId? accountId: this.accountId;
         this.projectId = accountId||projectId? projectId: this.projectId;
-        this.type = type? type: this.type;
-        this.tableId = TypeInfo[this.type].tableId;
         this.dataSet = null;
         this.csvDataToBeExported = null;
         this.csvDataToBeImported = null;
     }
 
-    // get the required data based on current data type
+    // get the required data based on current tabKey
     async fetchDataAsync() {
-        const url = TypeInfo[this.type].exportUrl;
+        const url = TableTabs[this.tabKey].exportUrl;
         const data = {
             'accountId': this.accountId,
             'projectId': this.projectId
@@ -117,8 +111,6 @@ export class Table {
     };
 
 
-
-
     // export data in cost table to CSV file
     exportCSV() {
         if(this.csvDataToBeExported ==null){
@@ -129,7 +121,7 @@ export class Table {
         let a = document.createElement('a');
         a.href = 'data:attachment/csv,' + csvString;
         a.target = '_blank';
-        a.download = this.type + (new Date()).getTime() + '.csv';
+        a.download = this.tabKey + (new Date()).getTime() + '.csv';
         document.body.appendChild(a);
         a.click();
     }
@@ -154,15 +146,15 @@ export class Table {
 
                 let key = keys[j];
                 // special handle with some keys
-                switch (this.type) {
-                    case DataType.PROJECTS:
+                switch (this.tabKey) {
+                    case 'projects':
                         if (key == 'template') {
                             jsonData[key] = { 'projectId': cells[j] };
                             continue;
                         }
                         break;
-                    case DataType.PROJECT:
-                    case DataType.USERS:
+                    case 'project':
+                    case 'users':
                         const params = key.split('.')
                         const length = params.length;
                         if (length == 2 && params[0] == 'products') {
@@ -200,7 +192,7 @@ export class Table {
             'projectId': this.projectId,
             'data': this.csvDataToBeImported
         }
-        const url = TypeInfo[this.type].importUrl;
+        const url = TableTabs[this.tabKey].importUrl;
         let response = null;
         try {
             response = await axios.post(url, data );
@@ -252,7 +244,7 @@ export class Table {
             cache: false,
             showToggle: false,
             pagination: true,
-            pageList: [5],
+            pageList: [5,10],
             pageSize: 5,
             pageNumber: 1,
             uniqueId: 'id',
@@ -264,54 +256,38 @@ export class Table {
             columns: columns
         });
     };
-
-
 }
 
 
 export async function refreshTableAsync( accountId = null, projectId=null ) {
-    if (g_costTable == null) {
-        g_costTable = new Table('#projectsTable', accountId, projectId );
-    }
-
     $('.clsInProgress').show();
     $('.clsResult').hide();
 
-    const activeTab = $("ul#adminTableTabs li.active").children()[0].hash.replace('#','');
-    g_costTable.resetDataInfo( activeTab, accountId, projectId );
-    
-    
-    if (g_costTable.projectId == null) {
-        $("#projectsTab").addClass("active");
-        $("#projectsTab").removeClass("hidden")
-        $("#projects").addClass("active")
 
-        $("#projectTab").removeClass("active");
-        $("#projectTab").addClass("hidden")
+    if (projectId == null) {
+        $("#projects").addClass("active");
+        $("#projects").removeClass("hidden")
+
         $("#project").removeClass("active");
+        $("#project").addClass("hidden")
 
-        $("#usersTab").removeClass("active");
-        $("#usersTab").addClass("hidden")
         $("#users").removeClass("active");
+        $("#users").addClass("hidden")
 
     } else {
-        $("#projectsTab").removeClass("active");
-        $("#projectsTab").addClass("hidden")
         $("#projects").removeClass("active");
+        $("#projects").addClass("hidden")
 
-        $("#projectTab").addClass("active");
-        $("#projectTab").removeClass("hidden")
         $("#project").addClass("active");
+        $("#project").removeClass("hidden")
 
-        $("#usersTab").removeClass("active");
-        $("#usersTab").removeClass("hidden")
         $("#users").removeClass("active");
-
+        $("#users").removeClass("hidden")
     } 
 
+    const activeTab = $("ul#adminTableTabs li.active")[0].id;
+    g_costTable.resetDataInfo( activeTab, accountId, projectId );
     await g_costTable.prepareDataAsync();
-
-    
     g_costTable.drawTable();
 
     $('.clsInProgress').hide();
@@ -321,6 +297,14 @@ export async function refreshTableAsync( accountId = null, projectId=null ) {
 }
 
 export async function initApp(){
+    // add all tabs
+    for (let key in TableTabs) {
+        $('<li id=' + key + '><a href="acc_table_holder" data-toggle="tab">' + TableTabs[key].tabName + '</a></li>').appendTo('#adminTableTabs');
+        $("#" + key).addClass((TableTabs[key].dataType == 'hub' && TableTabs[key].default) ? "active" : "hidden");
+        $("#" + key).removeClass((TableTabs[key].dataType == 'hub' && TableTabs[key].default)? "hidden" : "active");
+    } 
+
+    // event on the tabs
     $('a[data-toggle="tab"]').on('shown.bs.tab', async function (e) {
         if (g_costTable == null) {
             console.warn("The table is not ready, please create the table first!");
@@ -331,8 +315,8 @@ export async function initApp(){
         $('.clsResult').hide();
     
         try {
-            const dataType = e.target.hash.replace('#','');
-            g_costTable.resetDataInfo(dataType);
+            const activeTab = e.target.parentElement.id;
+            g_costTable.resetDataInfo(activeTab);
             await g_costTable.prepareDataAsync()
             g_costTable.drawTable();
         } catch (err) {
@@ -395,3 +379,5 @@ function importData() {
     };
     input.click();
 }
+
+var g_costTable = new Table('#acc_table' );
