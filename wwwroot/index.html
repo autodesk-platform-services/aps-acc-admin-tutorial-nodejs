@@ -6,16 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/x-icon" href="https://cdn.autodesk.io/favicon.ico">
     <link rel="stylesheet" href="https://unpkg.com/inspire-tree-dom@4.0.6/dist/inspire-tree-light.min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">    
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.22.2/dist/bootstrap-table.min.css">
     <link rel="stylesheet" href="/main.css">
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
     <script src="https://unpkg.com/inspire-tree@4.3.1/dist/inspire-tree.js"></script>
-    <script src="https://unpkg.com/inspire-tree-dom@4.0.6/dist/inspire-tree-dom.min.js"></script>    
+    <script src="https://unpkg.com/inspire-tree-dom@4.0.6/dist/inspire-tree-dom.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-    <script src="https://unpkg.com/bootstrap-table@1.22.2/dist/bootstrap-table.min.js"></script>    
+    <script src="https://unpkg.com/bootstrap-table@1.22.2/dist/bootstrap-table.min.js"></script>
     <script src="https://rawgit.com/michaelsogos/bootstrap-table-toolbar-buttons/master/src/bootstrap-table-toolbar-buttons.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="/main.js" type="module"></script>
@@ -36,14 +36,12 @@
     <div id="table">
         <ul id="adminTableTabs" class="nav nav-tabs">
         </ul>
-        <div id="acc_table_holder">
-            <div class="clsInProgress" style="text-align: center;" hidden>
-                <img src="res/Bars-1s-200px.svg">
-            </div>
-            <div class="clsResult">
-                <table id="acc_table">
-                </table>
-            </div>
+        <div id="table_area">
+            <table id="acc_table">
+            </table>
+        </div>
+        <div id="workingAnimation" hidden>
+            <img src="res/Bars-1s-200px.svg">
         </div>
     </div>
 </body>

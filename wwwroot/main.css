@@ -53,6 +53,10 @@ body, html {
     margin: 0.5em;
 }
 
+#workingAnimation {    
+    text-align: center;
+}
+
 @media (max-width: 768px) {
     #sidebar {
         width: 100%;

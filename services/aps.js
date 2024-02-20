@@ -12,6 +12,7 @@ service.getAuthorizationUrl = () => authClient.generateAuthUrl();
 service.authCallbackMiddleware = async (req, res, next) => {
     const credentials = await authClient.getToken(req.query.code);
     req.session.token = credentials.access_token;
+    req.session.refresh_token = credentials.refresh_token;
     req.session.expires_at = Date.now() + credentials.expires_in * 1000;
     next();
 };
@@ -26,6 +27,7 @@ service.authRefreshMiddleware = async (req, res, next) => {
     if (expires_at < Date.now()) {
         const credentials = await authClient.refreshToken({ refresh_token });
         req.session.token = credentials.access_token;
+        req.session.refresh_token = credentials.refresh_token;
         req.session.expires_at = Date.now() + credentials.expires_in * 1000;
     }
     req.oAuthToken = {

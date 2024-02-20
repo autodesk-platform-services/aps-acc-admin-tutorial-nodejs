@@ -23,5 +23,4 @@ router.get('/api/hubs/:hub_id/projects', async function (req, res, next) {
     }
 });
 
-
 module.exports = router;

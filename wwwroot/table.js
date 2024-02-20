@@ -1,24 +1,21 @@
-const TableTabs = {
-    'projects': {
-        'exportUrl': '/api/admin/projects',
-        'importUrl': '/api/admin/projects',
-        'tabName': 'PROJECTS',
-        'dataType': 'hub',
-        'default': true
+const TABLE_TABS = {
+    'PROJECTS': {
+        'REQUEST_URL': '/api/admin/projects',
+        'TAB_NAME': 'PROJECTS',
+        'DATA_TYPE': 'hub',
+        'BY_DEFAULT': true
     },
-    'project': {
-        'exportUrl': '/api/admin/project',
-        'importUrl': '/api/admin/project',
-        'tabName': 'PROJECT',
-        'dataType': 'project',
-        'default': true
+    'PROJECT': {
+        'REQUEST_URL': '/api/admin/project',
+        'TAB_NAME': 'PROJECT',
+        'DATA_TYPE': 'project',
+        'BY_DEFAULT': true
     },
-    'users': {
-        'exportUrl': '/api/admin/project/users',
-        'importUrl': '/api/admin/project/users',
-        'tabName': 'USERS',
-        'dataType': 'project',
-        'default': false
+    'USERS': {
+        'REQUEST_URL': '/api/admin/project/users',
+        'TAB_NAME': 'USERS',
+        'DATA_TYPE': 'project',
+        'BY_DEFAULT': false
     }
 }
 
@@ -26,7 +23,7 @@ const TableTabs = {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Table class wraps the specific data info
 export class Table {
-    constructor(tableId, accountId = null, projectId = null, tabKey = 'projects', dataSet = null) {
+    constructor(tableId, accountId = null, projectId = null, tabKey = 'PROJECTS', dataSet = null) {
         this.tableId = tableId;
         this.accountId = accountId;
         this.projectId = projectId;
@@ -49,8 +46,8 @@ export class Table {
     }
 
     // get the required data based on current tabKey
-    async fetchDataAsync() {
-        const url = TableTabs[this.tabKey].exportUrl;
+    async fetchData() {
+        const url = TABLE_TABS[this.tabKey].REQUEST_URL;
         const data = {
             'accountId': this.accountId,
             'projectId': this.projectId
@@ -147,14 +144,14 @@ export class Table {
                 let key = keys[j];
                 // special handle with some keys
                 switch (this.tabKey) {
-                    case 'projects':
+                    case 'PROJECTS':
                         if (key == 'template') {
                             jsonData[key] = { 'projectId': cells[j] };
                             continue;
                         }
                         break;
-                    case 'project':
-                    case 'users':
+                    case 'PROJECT':
+                    case 'USERS':
                         const params = key.split('.')
                         const length = params.length;
                         if (length == 2 && params[0] == 'products') {
@@ -182,7 +179,7 @@ export class Table {
 
 
     // protected: import projects or project users
-    async importCSVDataAsync() {
+    async importCSVData() {
         if (this.csvDataToBeImported == null) {
             console.warn('The CSV data to be imported is not ready, please parse the input CSV data first');
             return;
@@ -192,7 +189,7 @@ export class Table {
             'projectId': this.projectId,
             'data': this.csvDataToBeImported
         }
-        const url = TableTabs[this.tabKey].importUrl;
+        const url = TABLE_TABS[this.tabKey].REQUEST_URL;
         let response = null;
         try {
             response = await axios.post(url, data );
@@ -202,8 +199,8 @@ export class Table {
         return response?response.data : null;
     }
     
-    async prepareDataAsync(){
-        await this.fetchDataAsync();
+    async prepareData(){
+        await this.fetchData();
         this.polishData();
         this.generateCSVData();
     }
@@ -259,82 +256,12 @@ export class Table {
 }
 
 
-export async function refreshTableAsync( accountId = null, projectId=null ) {
-    $('.clsInProgress').show();
-    $('.clsResult').hide();
-
-
-    if (projectId == null) {
-        $("#projects").addClass("active");
-        $("#projects").removeClass("hidden")
-
-        $("#project").removeClass("active");
-        $("#project").addClass("hidden")
-
-        $("#users").removeClass("active");
-        $("#users").addClass("hidden")
-
-    } else {
-        $("#projects").removeClass("active");
-        $("#projects").addClass("hidden")
-
-        $("#project").addClass("active");
-        $("#project").removeClass("hidden")
-
-        $("#users").removeClass("active");
-        $("#users").removeClass("hidden")
-    } 
-
-    const activeTab = $("ul#adminTableTabs li.active")[0].id;
-    g_costTable.resetDataInfo( activeTab, accountId, projectId );
-    await g_costTable.prepareDataAsync();
-    g_costTable.drawTable();
-
-    $('.clsInProgress').hide();
-    $('.clsResult').show();
-
-
-}
-
-export async function initApp(){
-    // add all tabs
-    for (let key in TableTabs) {
-        $('<li id=' + key + '><a href="acc_table_holder" data-toggle="tab">' + TableTabs[key].tabName + '</a></li>').appendTo('#adminTableTabs');
-        $("#" + key).addClass((TableTabs[key].dataType == 'hub' && TableTabs[key].default) ? "active" : "hidden");
-        $("#" + key).removeClass((TableTabs[key].dataType == 'hub' && TableTabs[key].default)? "hidden" : "active");
-    } 
-
-    // event on the tabs
-    $('a[data-toggle="tab"]').on('shown.bs.tab', async function (e) {
-        if (g_costTable == null) {
-            console.warn("The table is not ready, please create the table first!");
-            return;
-        }
-
-        $('.clsInProgress').show();
-        $('.clsResult').hide();
-    
-        try {
-            const activeTab = e.target.parentElement.id;
-            g_costTable.resetDataInfo(activeTab);
-            await g_costTable.prepareDataAsync()
-            g_costTable.drawTable();
-        } catch (err) {
-            console.log(err);
-        }
-    
-        $('.clsInProgress').hide();
-        $('.clsResult').show();
-    });  
-}
-
-
 function exportData() {
-    if (!g_costTable || !g_costTable.csvDataToBeExported) {
+    if (!g_accDataTable || !g_accDataTable.csvDataToBeExported) {
         alert('The CSV data is not ready, please generate the data first.')
         return;
     }
-    g_costTable.exportCSV();
+    g_accDataTable.exportCSV();
 }
 
 
@@ -350,24 +277,20 @@ function importData() {
             if (typeof (FileReader) != "undefined") {
                 var reader = new FileReader();
                 reader.onload = async function (e) {
-                    if (!g_costTable) {
+                    if (!g_accDataTable) {
                         alert('please select one collection!');
                         return;
                     }
-                    $('.clsInProgress').show();
-                    $('.clsResult').hide();
+                    showTable(false);
                     try {
-                        g_costTable.parseCSVData(e.target.result);
-                        await g_costTable.importCSVDataAsync();
-                        await g_costTable.prepareDataAsync();
-                        g_costTable.drawTable();
+                        g_accDataTable.parseCSVData(e.target.result);
+                        await g_accDataTable.importCSVData();
+                        await g_accDataTable.prepareData();
+                        g_accDataTable.drawTable();
                     } catch (err) {
                         console.log(err);
                     }
-
-                    $('.clsInProgress').hide();
-                    $('.clsResult').show();
-
+                    showTable(true);
                 }
                 reader.readAsText(fileUpload[0]);
             } else {
@@ -380,4 +303,67 @@ function importData() {
     input.click();
 }
 
-var g_costTable = new Table('#acc_table' );
+
+function showTable( visible ){
+    $('#table_area')[0].hidden = !visible;
+    $('#workingAnimation')[0].hidden = visible;
+}
+
+export async function refreshTable( accountId = null, projectId=null ) {
+    showTable(false);
+
+    if (projectId == null) {
+        $("#PROJECTS").addClass("active");
+        $("#PROJECTS").removeClass("hidden")
+
+        $("#PROJECT").removeClass("active");
+        $("#PROJECT").addClass("hidden")
+
+        $("#USERS").removeClass("active");
+        $("#USERS").addClass("hidden")
+
+    } else {
+        $("#PROJECTS").removeClass("active");
+        $("#PROJECTS").addClass("hidden")
+
+        $("#PROJECT").addClass("active");
+        $("#PROJECT").removeClass("hidden")
+
+        $("#USERS").removeClass("active");
+        $("#USERS").removeClass("hidden")
+    } 
+    const activeTab = $("ul#adminTableTabs li.active")[0].id;
+    g_accDataTable.resetDataInfo( activeTab, accountId, projectId );
+    await g_accDataTable.prepareData();
+    g_accDataTable.drawTable();
+    showTable(true);
+}
+
+export async function initTableTabs(){
+    // add all tabs
+    for (let key in TABLE_TABS) {
+        $('<li id=' + key + '><a href="acc_table" data-toggle="tab">' + TABLE_TABS[key].TAB_NAME + '</a></li>').appendTo('#adminTableTabs');
+        $("#" + key).addClass((TABLE_TABS[key].DATA_TYPE == 'hub' && TABLE_TABS[key].BY_DEFAULT) ? "active" : "hidden");
+        $("#" + key).removeClass((TABLE_TABS[key].DATA_TYPE == 'hub' && TABLE_TABS[key].BY_DEFAULT)? "hidden" : "active");
+    } 
+
+    // event on the tabs
+    $('a[data-toggle="tab"]').on('shown.bs.tab', async function (e) {
+        if (g_accDataTable == null) {
+            console.warn("The table is not ready, please create the table first!");
+            return;
+        }
+        showTable(false);        
+        try {
+            const activeTab = e.target.parentElement.id;
+            g_accDataTable.resetDataInfo(activeTab);
+            await g_accDataTable.prepareData()
+            g_accDataTable.drawTable();
+        } catch (err) {
+            console.log(err);
+        }    
+        showTable(true);
+    });  
+}
+
+var g_accDataTable = new Table('#acc_table' );
