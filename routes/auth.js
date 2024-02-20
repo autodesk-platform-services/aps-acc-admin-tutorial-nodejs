@@ -16,13 +16,9 @@ router.get('/api/auth/callback', authCallbackMiddleware, function (req, res) {
     res.redirect('/');
 });
 
-router.get('/api/auth/token', authRefreshMiddleware, function (req, res) {
-    res.json(req.publicOAuthToken);
-});
-
 router.get('/api/auth/profile', authRefreshMiddleware, async function (req, res, next) {
     try {
-        const profile = await getUserProfile(req.internalOAuthToken);
+        const profile = await getUserProfile(req.oAuthToken);
         res.json({ name: `${profile.given_name} ${profile.family_name}` });
     } catch (err) {
         next(err);

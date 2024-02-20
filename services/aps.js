@@ -1,22 +1,18 @@
 const APS = require('forge-apis');
 const axios = require('axios');
 
-const { APS_CLIENT_ID, APS_CLIENT_SECRET, APS_CALLBACK_URL, INTERNAL_TOKEN_SCOPES, PUBLIC_TOKEN_SCOPES, ACC_APIS } = require('../config.js');
+const { APS_CLIENT_ID, APS_CLIENT_SECRET, APS_CALLBACK_URL, TOKEN_SCOPES, ACC_APIS } = require('../config.js');
 
-const internalAuthClient = new APS.AuthClientThreeLegged(APS_CLIENT_ID, APS_CLIENT_SECRET, APS_CALLBACK_URL, INTERNAL_TOKEN_SCOPES);
-const publicAuthClient = new APS.AuthClientThreeLegged(APS_CLIENT_ID, APS_CLIENT_SECRET, APS_CALLBACK_URL, PUBLIC_TOKEN_SCOPES);
+const authClient = new APS.AuthClientThreeLegged(APS_CLIENT_ID, APS_CLIENT_SECRET, APS_CALLBACK_URL, TOKEN_SCOPES);
 
 const service = module.exports = {};
 
-service.getAuthorizationUrl = () => internalAuthClient.generateAuthUrl();
+service.getAuthorizationUrl = () => authClient.generateAuthUrl();
 
 service.authCallbackMiddleware = async (req, res, next) => {
-    const internalCredentials = await internalAuthClient.getToken(req.query.code);
-    const publicCredentials = await publicAuthClient.refreshToken(internalCredentials);
-    req.session.public_token = publicCredentials.access_token;
-    req.session.internal_token = internalCredentials.access_token;
-    req.session.refresh_token = publicCredentials.refresh_token;
-    req.session.expires_at = Date.now() + internalCredentials.expires_in * 1000;
+    const credentials = await authClient.getToken(req.query.code);
+    req.session.token = credentials.access_token;
+    req.session.expires_at = Date.now() + credentials.expires_in * 1000;
     next();
 };
 
@@ -28,43 +24,35 @@ service.authRefreshMiddleware = async (req, res, next) => {
     }
 
     if (expires_at < Date.now()) {
-        const internalCredentials = await internalAuthClient.refreshToken({ refresh_token });
-        const publicCredentials = await publicAuthClient.refreshToken(internalCredentials);
-        req.session.public_token = publicCredentials.access_token;
-        req.session.internal_token = internalCredentials.access_token;
-        req.session.refresh_token = publicCredentials.refresh_token;
-        req.session.expires_at = Date.now() + internalCredentials.expires_in * 1000;
+        const credentials = await authClient.refreshToken({ refresh_token });
+        req.session.token = credentials.access_token;
+        req.session.expires_at = Date.now() + credentials.expires_in * 1000;
     }
-    req.internalOAuthToken = {
-        access_token: req.session.internal_token,
-        expires_in: Math.round((req.session.expires_at - Date.now()) / 1000)
-    };
-    req.publicOAuthToken = {
-        access_token: req.session.public_token,
+    req.oAuthToken = {
+        access_token: req.session.token,
         expires_in: Math.round((req.session.expires_at - Date.now()) / 1000)
     };
     next();
 };
 
 service.getUserProfile = async (token) => {
-    const resp = await new APS.UserProfileApi().getUserProfile(internalAuthClient, token);
+    const resp = await new APS.UserProfileApi().getUserProfile(authClient, token);
     return resp.body;
 };
 
 // Data Management APIs
 service.getHubs = async (token) => {
-    const resp = await new APS.HubsApi().getHubs(null, internalAuthClient, token);
+    const resp = await new APS.HubsApi().getHubs(null, authClient, token);
     return resp.body.data.filter((item)=>{
         return item.id.startsWith('b.');
     })
 };
 
 service.getProjects = async (hubId, token) => {
-    const resp = await new APS.ProjectsApi().getHubProjects(hubId, null, internalAuthClient, token);
+    const resp = await new APS.ProjectsApi().getHubProjects(hubId, null, authClient, token);
     return resp.body.data;
 };
 
-//////////////////////////////////////////////////////////////////////////////////////
 // ACC Admin APIs
 service.getProjectsACC = async (accountId, token) => {
 
@@ -128,9 +116,6 @@ service.importProjectUsersACC = async (projectId, projectUsers, token) => {
     return response.data;
 }
 
-
-/////////////////////////////////////////////////////////////////////////////
-// Add String.format() method if it's not existing
 if (!String.prototype.format) {
     String.prototype.format = function () {
         var args = arguments;

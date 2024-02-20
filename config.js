@@ -5,8 +5,7 @@ if (!APS_CLIENT_ID || !APS_CLIENT_SECRET || !APS_CALLBACK_URL || !SERVER_SESSION
     console.warn('Missing some of the environment variables.');
     process.exit(1);
 }
-const INTERNAL_TOKEN_SCOPES = ['data:read', 'account:read', 'account:write'];
-const PUBLIC_TOKEN_SCOPES = ['viewables:read'];
+const TOKEN_SCOPES = ['data:read', 'account:read', 'account:write'];
 PORT = PORT || 8080;
 
 const ACC_APIS = {
@@ -24,8 +23,7 @@ module.exports = {
     APS_CLIENT_SECRET,
     APS_CALLBACK_URL,
     SERVER_SESSION_SECRET,
-    INTERNAL_TOKEN_SCOPES,
-    PUBLIC_TOKEN_SCOPES,
+    TOKEN_SCOPES,
     PORT,
     ACC_APIS
 };
