@@ -217,7 +217,7 @@ function exportData() {
     g_accDataTable.exportToCSV();
 }
 
-function importData() {
+async function importData() {
     let input = document.createElement('input');
     input.type = 'file';
     input.onchange = _ => {
@@ -227,14 +227,14 @@ function importData() {
             if (typeof (FileReader) != "undefined") {
                 var reader = new FileReader();
                 reader.onload = async function (e) {
-                    showTable(false);
+                    $("#loadingoverlay").fadeIn()
                     try {
                         await g_accDataTable.importFromCSV(e.target.result);
                         await g_accDataTable.prepareDataAndDraw();
                     } catch (err) {
                         console.warn(err);
                     }
-                    showTable(true);
+                    $("#loadingoverlay").fadeOut()
                 }
                 reader.readAsText(fileUpload[0]);
             } else {
@@ -247,13 +247,8 @@ function importData() {
     input.click();
 }
 
-function showTable( visible ){
-    $('#tableArea')[0].hidden = !visible;
-    $('#workingAnimation')[0].hidden = visible;
-}
-
 export async function refreshTable( accountId = null, projectId=null ) {
-    showTable(false);
+    $("#loadingoverlay").fadeIn()
     if( TABLE_TABS[g_accDataTable.tabKey].CATEGORY_NAME=='hub' && projectId ){
         for (let key in TABLE_TABS) {
             if( TABLE_TABS[key].CATEGORY_NAME == 'hub' ){
@@ -283,7 +278,7 @@ export async function refreshTable( accountId = null, projectId=null ) {
     const activeTab = $("ul#adminTableTabs li.active")[0].id;
     g_accDataTable.resetDataInfo( activeTab, accountId, projectId );
     await g_accDataTable.prepareDataAndDraw();
-    showTable(true);
+    $("#loadingoverlay").fadeOut()
 }
 
 export async function initTableTabs(){
@@ -294,7 +289,7 @@ export async function initTableTabs(){
     } 
     // event on the tabs
     $('a[data-toggle="tab"]').on('shown.bs.tab', async function (e) {
-        showTable(false);        
+        $("#loadingoverlay").fadeIn()
         try {
             const activeTab = e.target.parentElement.id;
             g_accDataTable.resetDataInfo(activeTab);
@@ -302,7 +297,7 @@ export async function initTableTabs(){
         } catch (err) {
             console.warn(err);
         }    
-        showTable(true);
+        $("#loadingoverlay").fadeOut()
     });  
 }
 
