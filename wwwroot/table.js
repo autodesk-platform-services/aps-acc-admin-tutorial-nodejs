@@ -40,14 +40,14 @@ class Table {
         return this.#tabKey;
     }
 
-    resetDataInfo( tabKey=null, accountId=null, projectId=null ){
+    resetDataInfo = ( tabKey=null, accountId=null, projectId=null ) =>{
         this.#tabKey = tabKey? tabKey: this.#tabKey;
         this.#accountId = accountId? accountId: this.#accountId;
         this.#projectId = accountId||projectId? projectId: this.#projectId;
         this.#dataSet = null;
     }
 
-    async prepareDataAndDraw(){
+    prepareDataAndDraw = async() => {
         const url = TABLE_TABS[this.#tabKey].REQUEST_URL;
         const data = {
             'accountId': this.#accountId,
@@ -84,13 +84,13 @@ class Table {
                     name: "grid-export",
                     title: "Export",
                     icon: "glyphicon-export",
-                    callback: exportData
+                    callback: this.exportToCSV
                 },
                 {
                     name: "grid-import",
                     title: "Import",
                     icon: "glyphicon-import",
-                    callback: importData
+                    callback: this.importFromCSV
                 }
             ],
             editable: true,
@@ -111,7 +111,7 @@ class Table {
         });
     }
 
-    exportToCSV() {
+    exportToCSV = ()=>{
         if (this.#dataSet == null || this.#dataSet.length == 0) {
             console.warn('DataSet is not ready, please fetch your data first.');
             return;
@@ -141,110 +141,89 @@ class Table {
         a.click();
     }
 
-    async importFromCSV( inputCSVData ){
-        if( inputCSVData == null ){
-            console.warn('The input csv file is not ready, please provide correct csv data.');
-            return;
-        }
-        const rows = inputCSVData.split("\r\n");
-        const keys = rows[0].split(',');
-        let requestDataList = [];
-        for (let i = 1; i < rows.length; i++) {
-            let jsonDataItem = {};
-            let cells = rows[i].split(",");
-            for (let j = 0; j < cells.length; j++) {
-                if (cells[j] == null || cells[j] == '')
-                    continue
-                // customize the input property
-                let key = keys[j];
-                switch (this.#tabKey) {
-                    case 'PROJECTS':
-                        if (key == 'template') {
-                            jsonDataItem[key] = { 'projectId': cells[j] };
-                            continue;
-                        }
-                        break;
-                    case 'PROJECT':
-                    case 'USERS':
-                        if(key == 'roleIds'){
-                            const roleIdList = cells[j].replace(/\s/g,'').split('|');
-                            jsonDataItem[key] = roleIdList;
-                            continue;
-                        }
-                        const params = key.split('.')
-                        const length = params.length;
-                        if (length == 2 && params[0] == 'products') {
-                            let productAccess = {
-                                "key": params[length - 1],
-                                "access": cells[j]
+    importFromCSV = async() => {
+        let input = document.createElement('input');
+        input.type = 'file';
+        input.onchange = _ => {
+            let fileUpload = Array.from(input.files);
+            var regex = /^([a-zA-Z0-9\s_\\.\-:\(\)])+(.csv|.txt)$/;
+            if (regex.test(fileUpload[0].name.toLowerCase())) {
+                if (typeof (FileReader) != "undefined") {
+                    var reader = new FileReader();
+                    reader.onload = async (e) => {
+                        $("#loadingoverlay").fadeIn()
+                        const rows = e.target.result.split("\r\n");
+                        const keys = rows[0].split(',');
+                        let requestDataList = [];
+                        for (let i = 1; i < rows.length; i++) {
+                            let jsonItem = {};
+                            let cells = rows[i].split(",");
+                            for (let j = 0; j < cells.length; j++) {
+                                if (cells[j] == null || cells[j] == '')
+                                    continue
+                                // customize the input property
+                                let key = keys[j];
+                                switch (this.#tabKey) {
+                                    case 'PROJECTS':
+                                        if (key == 'template') {
+                                            jsonItem[key] = { 'projectId': cells[j] };
+                                            continue;
+                                        }
+                                        break;
+                                    case 'PROJECT':
+                                    case 'USERS':
+                                        if (key == 'roleIds') {
+                                            const roleIdList = cells[j].replace(/\s/g, '').split('|');
+                                            jsonItem[key] = roleIdList;
+                                            continue;
+                                        }
+                                        const params = key.split('.')
+                                        const length = params.length;
+                                        if (length == 2 && params[0] == 'products') {
+                                            let productAccess = {
+                                                "key": params[length - 1],
+                                                "access": cells[j]
+                                            }
+                                            if (jsonItem["products"] == null) {
+                                                jsonItem["products"] = [];
+                                            }
+                                            jsonItem["products"].push(productAccess)
+                                            continue
+                                        }
+                                        break;
+                                    default:
+                                        console.warn("The current Admin Data Type is not expected");
+                                        break;
+                                }
+                                jsonItem[key] = cells[j];
                             }
-                            if (jsonDataItem["products"] == null) {
-                                jsonDataItem["products"] = [];
-                            }
-                            jsonDataItem["products"].push(productAccess)
-                            continue
+                            requestDataList.push(jsonItem);
                         }
-                        break;
-                    default:
-                        console.warn("The current Admin Data Type is not expected");
-                        break;
-                }
-                jsonDataItem[key] = cells[j];
-            }
-            requestDataList.push(jsonDataItem);
-        }
-        const data = {
-            'accountId': this.#accountId,
-            'projectId': this.#projectId,
-            'data': requestDataList
-        }
-        const url = TABLE_TABS[this.#tabKey].REQUEST_URL;
-        let response = null;
-        try {
-            response = await axios.post(url, data );
-        } catch (err) {
-            console.error(err);
-        }
-        return response?response.data : null;
-    }
-}
+                        const data = {
+                            'accountId': this.#accountId,
+                            'projectId': this.#projectId,
+                            'data': requestDataList
+                        }
+                        const url = TABLE_TABS[this.#tabKey].REQUEST_URL;
+                        try {
+                            await axios.post(url, data);
+                            await this.prepareDataAndDraw();
 
-function exportData() {
-    if (!g_accDataTable ) {
-        alert('The CSV data is not ready, please generate the data first.')
-        return;
-    }
-    g_accDataTable.exportToCSV();
-}
-
-async function importData() {
-    let input = document.createElement('input');
-    input.type = 'file';
-    input.onchange = _ => {
-        let fileUpload = Array.from(input.files);
-        var regex = /^([a-zA-Z0-9\s_\\.\-:\(\)])+(.csv|.txt)$/;
-        if (regex.test(fileUpload[0].name.toLowerCase())) {
-            if (typeof (FileReader) != "undefined") {
-                var reader = new FileReader();
-                reader.onload = async function (e) {
-                    $("#loadingoverlay").fadeIn()
-                    try {
-                        await g_accDataTable.importFromCSV(e.target.result);
-                        await g_accDataTable.prepareDataAndDraw();
-                    } catch (err) {
-                        console.warn(err);
+                        } catch (err) {
+                            console.error(err);
+                        }
+                        $("#loadingoverlay").fadeOut()
                     }
-                    $("#loadingoverlay").fadeOut()
+                    reader.readAsText(fileUpload[0]);
+                } else {
+                    alert("This browser does not support HTML5.");
                 }
-                reader.readAsText(fileUpload[0]);
             } else {
-                alert("This browser does not support HTML5.");
+                alert("Please upload a valid CSV file.");
             }
-        } else {
-            alert("Please upload a valid CSV file.");
-        }
-    };
-    input.click();
+        };
+        input.click();
+    }    
 }
 
 export async function refreshTable( accountId = null, projectId=null ) {

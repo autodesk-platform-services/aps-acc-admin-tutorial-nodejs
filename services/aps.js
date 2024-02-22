@@ -52,7 +52,9 @@ service.getHubs = async (token) => {
 
 service.getProjects = async (hubId, token) => {
     const resp = await new APS.ProjectsApi().getHubProjects(hubId, null, authClient, token);
-    return resp.body.data;
+    return resp.body.data.filter( (item)=>{
+        return item.attributes.extension.data.projectType == 'ACC';
+    } )
 };
 
 // ACC Admin APIs
