@@ -1,16 +1,26 @@
-const APS = require('forge-apis');
-const axios = require('axios');
+const { SdkManagerBuilder } = require('@aps_sdk/autodesk-sdkmanager');
+const { AuthenticationClient, Scopes, ResponseType } = require('@aps_sdk/authentication');
+const { DataManagementClient } = require('@aps_sdk/data-management');
+const { AdminClient, Platform  } = require('@aps_sdk/account-admin');
 
-const { APS_CLIENT_ID, APS_CLIENT_SECRET, APS_CALLBACK_URL, TOKEN_SCOPES, ACC_APIS } = require('../config.js');
-
-const authClient = new APS.AuthClientThreeLegged(APS_CLIENT_ID, APS_CLIENT_SECRET, APS_CALLBACK_URL, TOKEN_SCOPES);
+const { APS_CLIENT_ID, APS_CLIENT_SECRET, APS_CALLBACK_URL } = require('../config.js');
 
 const service = module.exports = {};
 
-service.getAuthorizationUrl = () => authClient.generateAuthUrl();
+const sdk = SdkManagerBuilder.Create().build();
+const authenticationClient = new AuthenticationClient(sdk);
+const dataManagementClient = new DataManagementClient(sdk);
+const adminClient = new AdminClient(sdk);
+
+
+service.getAuthorizationUrl = () => authenticationClient.authorize(APS_CLIENT_ID, ResponseType.Code, APS_CALLBACK_URL, [
+    Scopes.Dataread,
+    Scopes.Accountread,
+    Scopes.Accountwrite
+]);
 
 service.authCallbackMiddleware = async (req, res, next) => {
-    const credentials = await authClient.getToken(req.query.code);
+    const credentials = await authenticationClient.getThreeLeggedTokenAsync(APS_CLIENT_ID, APS_CLIENT_SECRET, req.query.code, APS_CALLBACK_URL);
     req.session.token = credentials.access_token;
     req.session.refresh_token = credentials.refresh_token;
     req.session.expires_at = Date.now() + credentials.expires_in * 1000;
@@ -25,7 +35,11 @@ service.authRefreshMiddleware = async (req, res, next) => {
     }
 
     if (expires_at < Date.now()) {
-        const credentials = await authClient.refreshToken({ refresh_token });
+        const credentials = await authenticationClient.getRefreshTokenAsync(APS_CLIENT_ID, APS_CLIENT_SECRET, refresh_token, [
+            Scopes.Dataread,
+            Scopes.Accountread,
+            Scopes.Accountwrite
+        ]);
         req.session.token = credentials.access_token;
         req.session.refresh_token = credentials.refresh_token;
         req.session.expires_at = Date.now() + credentials.expires_in * 1000;
@@ -38,96 +52,80 @@ service.authRefreshMiddleware = async (req, res, next) => {
 };
 
 service.getUserProfile = async (token) => {
-    const resp = await new APS.UserProfileApi().getUserProfile(authClient, token);
-    return resp.body;
+    const resp = await authenticationClient.getUserinfoAsync(token.access_token);
+    return resp;
 };
 
 // Data Management APIs
 service.getHubs = async (token) => {
-    const resp = await new APS.HubsApi().getHubs(null, authClient, token);
-    return resp.body.data.filter((item)=>{
+    const resp = await dataManagementClient.GetHubsAsync(token.access_token);
+    return resp.data.filter((item)=>{
         return item.id.startsWith('b.');
     })
 };
 
 service.getProjects = async (hubId, token) => {
-    const resp = await new APS.ProjectsApi().getHubProjects(hubId, null, authClient, token);
-    return resp.body.data.filter( (item)=>{
+    const resp = await dataManagementClient.GetHubProjectsAsync(token.access_token, hubId);
+    return resp.data.filter( (item)=>{
         return item.attributes.extension.data.projectType == 'ACC';
     } )
 };
 
 // ACC Admin APIs
 service.getProjectsACC = async (accountId, token) => {
-
     let allProjects = [];
-    let requestUrl = ACC_APIS.URL.PROJECTS_URL.format(accountId);
-    while (requestUrl) {
-        const response = await axios.get(requestUrl, { headers: { 'Authorization': 'Bearer ' + token } });
-        allProjects = allProjects.concat(response.data.results);
-        requestUrl = response.data.pagination.nextUrl;
-    }
+    let offset = 0;
+    let totalResults = 0;
+    do {
+        const resp = await adminClient.getProjectsAsync(token, accountId, null, null, null, null, null, null, null, null, null, null, null, null, null, null, offset);
+        allProjects = allProjects.concat(resp.results);
+        offset += resp.pagination.limit;
+        totalResults = resp.pagination.totalResults;
+    } while (offset < totalResults)
     return allProjects;
 };
 
 service.createProjectACC = async (accountId, projectInfo, token) =>{
-    const requestUrl = ACC_APIS.URL.PROJECTS_URL.format(accountId);
-    const response = await axios.post(requestUrl, projectInfo, { headers: { 'Authorization': 'Bearer ' + token } });
-    return response.data;
+    const resp = await adminClient.createProjectAsync( token, accountId, projectInfo );
+    return resp;
 }
 
 service.getProjectACC = async (projectId, token) => {
-    const requestUrl = ACC_APIS.URL.PROJECT_URL.format(projectId);
     let projectsList = [];
-    const response = await axios.get(requestUrl, { headers: { 'Authorization': 'Bearer ' + token } });
-    projectsList.push(response.data);
+    const resp = await adminClient.getProjectAsync( token, projectId );
+    projectsList.push(resp);
     return projectsList;
 };
 
 service.getProjectUsersACC = async (projectId, token) => {
-    let requestUrl = ACC_APIS.URL.PROJECT_USERS_URL.format(projectId);
     let allUsers = [];
-    while (requestUrl) {
-        const response = await axios.get(requestUrl, { headers: { 'Authorization': 'Bearer ' + token } });
-        allUsers = allUsers.concat(response.data.results);
-        requestUrl = response.data.pagination.nextUrl;
-    }
+    let offset = 0;
+    let totalResults = 0;
+    do{
+        const resp = await adminClient.getProjectUsersAsync( token, projectId, null, null, null, null, null, null, null, null, null, null,null,null,null,null,null,null,null,offset );
+        allUsers = allUsers.concat(resp.results);
+        offset += resp.pagination.limit;
+        totalResults = resp.pagination.totalResults;
+    }while (offset < totalResults) 
     return allUsers;
 };
 
 service.addProjectAdminACC = async (projectId, email, token) => {
-    const requestUrl = ACC_APIS.URL.PROJECT_USERS_URL.format(projectId);
     const userBody = {
         "email": email,
-        "products": [
-            {
-                "key": "projectAdministration",
-                "access": "administrator"
-            },
-            {
-                "key": "docs",
-                "access": "administrator"
-            }
-        ]
+        "products": [{
+            "key": "projectAdministration",
+            "access": "administrator"
+        }, {
+            "key": "docs",
+            "access": "administrator"
+        }]
     }
-    const response = await axios.post(requestUrl, userBody, { headers: { 'Authorization': 'Bearer ' + token } });
-    return response.data;
+    const resp = await adminClient.assignProjectUserAsync( token, projectId, userBody );
+    return resp;
 }
 
 service.importProjectUsersACC = async (projectId, projectUsers, token) => {
-    const requestUrl = ACC_APIS.URL.PROJECT_IMPORT_USERS_URL.format(projectId);
-    let response = await axios.post( requestUrl, projectUsers, { headers: { 'Authorization': 'Bearer ' + token } });
-    return response.data;
-}
-
-if (!String.prototype.format) {
-    String.prototype.format = function () {
-        var args = arguments;
-        return this.replace(/{(\d+)}/g, function (match, number) {
-            return typeof args[number] != 'undefined'
-                ? args[number]
-                : match
-                ;
-        });
-    };
+    const resp = await adminClient.importProjectUsersAsync( token, projectId, projectUsers )
+    return resp;
 }

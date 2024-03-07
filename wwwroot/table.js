@@ -40,14 +40,14 @@ class Table {
         return this.#tabKey;
     }
 
-    resetDataInfo = ( tabKey=null, accountId=null, projectId=null ) =>{
+    set tabKey( tabKey ){
+        this.#tabKey = tabKey;
+    }
+
+    resetData = async( tabKey=null, accountId=null, projectId=null ) =>{
         this.#tabKey = tabKey? tabKey: this.#tabKey;
         this.#accountId = accountId? accountId: this.#accountId;
         this.#projectId = accountId||projectId? projectId: this.#projectId;
-        this.#dataSet = null;
-    }
-
-    prepareDataAndDraw = async() => {
         const url = TABLE_TABS[this.#tabKey].REQUEST_URL;
         const data = {
             'accountId': this.#accountId,
@@ -68,6 +68,14 @@ class Table {
                 })
             }
         }
+    }
+
+    drawTable = () => {
+        if (this.#dataSet == null || this.#dataSet.length == 0) {
+            console.warn('DataSet is not ready, please fetch your data first.');
+            return;
+        }
+
         let columns = [];
         for (var key in this.#dataSet[0]) {
             columns.push({
@@ -98,7 +106,7 @@ class Table {
             cache: false,
             showToggle: false,
             pagination: true,
-            pageList: [5,10],
+            pageList: [5],
             pageSize: 5,
             pageNumber: 1,
             uniqueId: 'id',
@@ -151,6 +159,9 @@ class Table {
                 if (typeof (FileReader) != "undefined") {
                     var reader = new FileReader();
                     reader.onload = async (e) => {
+                        function sleep(ms = 0) {
+                            return new Promise(resolve => setTimeout(resolve, ms));
+                        }
                         $("#loadingoverlay").fadeIn()
                         const rows = e.target.result.split("\r\n");
                         const keys = rows[0].split(',');
@@ -206,12 +217,15 @@ class Table {
                         }
                         const url = TABLE_TABS[this.#tabKey].REQUEST_URL;
                         try {
-                            await axios.post(url, data);
-                            await this.prepareDataAndDraw();
-
+                            const resp = await axios.post(url, data);
+                            resp.data.Succeed && resp.data.Succeed.forEach( item => console.log( item + ' is created'));
+                            resp.data.Failed && resp.data.Failed.forEach( item => console.warn( item + ' failed to be created') );
+                            await sleep(3000);
+                            await this.resetData();
                         } catch (err) {
                             console.error(err);
                         }
+                        this.drawTable();
                         $("#loadingoverlay").fadeOut()
                     }
                     reader.readAsText(fileUpload[0]);
@@ -255,8 +269,12 @@ export async function refreshTable( accountId = null, projectId=null ) {
         }
     }
     const activeTab = $("ul#adminTableTabs li.active")[0].id;
-    g_accDataTable.resetDataInfo( activeTab, accountId, projectId );
-    await g_accDataTable.prepareDataAndDraw();
+    try{
+        await g_accDataTable.resetData( activeTab, accountId, projectId );
+        g_accDataTable.drawTable();
+    }catch(err){
+        console.warn(err);
+    }
     $("#loadingoverlay").fadeOut()
 }
 
@@ -269,10 +287,10 @@ export async function initTableTabs(){
     // event on the tabs
     $('a[data-toggle="tab"]').on('shown.bs.tab', async function (e) {
         $("#loadingoverlay").fadeIn()
+        const activeTab = e.target.parentElement.id;
         try {
-            const activeTab = e.target.parentElement.id;
-            g_accDataTable.resetDataInfo(activeTab);
-            await g_accDataTable.prepareDataAndDraw();
+            await g_accDataTable.resetData(activeTab);
+            g_accDataTable.drawTable();
         } catch (err) {
             console.warn(err);
         }    

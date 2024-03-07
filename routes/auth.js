@@ -19,7 +19,7 @@ router.get('/api/auth/callback', authCallbackMiddleware, function (req, res) {
 router.get('/api/auth/profile', authRefreshMiddleware, async function (req, res, next) {
     try {
         const profile = await getUserProfile(req.oAuthToken);
-        res.json({ name: `${profile.given_name} ${profile.family_name}` });
+        res.json({ name: `${profile.name}` });
     } catch (err) {
         next(err);
     }

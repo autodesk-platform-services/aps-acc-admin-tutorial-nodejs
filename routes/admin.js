@@ -28,20 +28,22 @@ router.get('/api/admin/project', async function(req, res, next){
 router.post('/api/admin/projects', bodyParser.json(), async function (req, res, next) {
     const accountId = req.body.accountId;
     const projects = req.body.data;
-    let projectsRes = [];
+    let projectsCreated = [];
+    let projectsFailed = [];
     await Promise.all(
         projects.map(async (project) => {
             try{
                 const projectInfo = await createProjectACC(accountId, project, req.oAuthToken.access_token);
-                projectsRes.push(projectInfo);
+                projectsCreated.push(projectInfo.name);
                 const profile = await getUserProfile(req.oAuthToken);
                 await addProjectAdminACC( projectInfo.id, profile.email, req.oAuthToken.access_token )
             }catch(err){
-                console.warn("Failed to create project for: "+ project.name + "due to: "+ err.statusMessage )
+                console.warn("Failed to create project for: "+ project.name + "due to: "+ err )
+                projectsFailed.push( project.name )
             }
         })
     )
-    res.json(projectsRes);
+    res.json({'Succeed':projectsCreated, 'Failed': projectsFailed });
 });
 
 router.get('/api/admin/project/users', async function (req, res, next) {
