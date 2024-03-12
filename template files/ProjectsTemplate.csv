@@ -1,3 +1,6 @@
 name,addressLine1,addressLine2,city,constructionType,contractType,country,currentPhase,deliveryMethod,jobNumber,platform,postalCode,startDate,stateOrProvince,timezone,classification,type,template
-Tutorial Zhong 027,The Fifth Avenue,þ301,NewYork,Renovation,Design-Bid,US,,Design-Bid,0219-01,acc,10011,2017-05-02,NY,America/New_York,production,Commercial,
-Tutorial Zhong 028,The Fifth Avenue,þ301,NewYork,Renovation,Design-Bid,US,,Design-Bid,0219-01,acc,10011,2017-05-02,NY,America/New_York,production,Commercial,8d1c8983-9c57-43ce-ba94-82538ac5786d
+Sample Project - 001,The Fifth Avenue,U301,NewYork,Renovation,Design-Bid,US,,Design-Bid,0219-01,acc,10011,2017-05-02,NY,America/New_York,production,Commercial,
+Sample Project - 002,The Fifth Avenue,U301,NewYork,Renovation,Design-Bid,US,,Design-Bid,0219-01,acc,10011,2017-05-02,NY,America/New_York,production,Commercial,
+Sample Project - 003,The Fifth Avenue,U301,NewYork,Renovation,Design-Bid,US,,Design-Bid,0219-01,acc,10011,2017-05-02,NY,America/New_York,production,Commercial,
+Sample Project - 004,The Fifth Avenue,U301,NewYork,Renovation,Design-Bid,US,,Design-Bid,0219-01,acc,10011,2017-05-02,NY,America/New_York,production,Commercial,
+Sample Project - 005,The Fifth Avenue,U301,NewYork,Renovation,Design-Bid,US,,Design-Bid,0219-01,acc,10011,2017-05-02,NY,America/New_York,production,Commercial,

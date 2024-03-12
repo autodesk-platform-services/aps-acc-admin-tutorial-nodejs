@@ -1,3 +1,6 @@
 email,firstName,lastName,companyId,roleIds,products.insight,products.docs,products.projectAdministration,products.autoSpecs,products.build,products.cost,products.designCollaboration,products.modelCoordination,products.takeoff
 sample1@sample.com,,,,,administrator,administrator,administrator,administrator,administrator,administrator,administrator,administrator,none
-sample2@sample.com,,,,,administrator,administrator,administrator,none,none,none,none,none,none
+sample2@sample.com,,,,,administrator,administrator,administrator,administrator,administrator,administrator,administrator,administrator,none
+sample3@sample.com,,,,,administrator,administrator,administrator,administrator,administrator,administrator,administrator,administrator,none
+sample4@sample.com,,,,,administrator,administrator,administrator,administrator,administrator,administrator,administrator,administrator,none
+sample5@sample.com,,,,,administrator,administrator,administrator,none,none,none,none,none,none

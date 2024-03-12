@@ -27,6 +27,7 @@ class Table {
     #projectId;
     #tabKey;
     #dataSet;
+    #maxItem;
 
     constructor(tableId, accountId = null, projectId = null, tabKey = 'PROJECTS') {
         this.#tableId = tableId;
@@ -34,6 +35,7 @@ class Table {
         this.#projectId = projectId;
         this.#tabKey = tabKey;
         this.#dataSet = null;
+        this.#maxItem = 5;
     };
 
     get tabKey(){
@@ -166,7 +168,7 @@ class Table {
                         const rows = e.target.result.split("\r\n");
                         const keys = rows[0].split(',');
                         let requestDataList = [];
-                        for (let i = 1; i < rows.length; i++) {
+                        for (let i = 1; i < rows.length && i <= this.#maxItem; i++) {
                             let jsonItem = {};
                             let cells = rows[i].split(",");
                             for (let j = 0; j < cells.length; j++) {
