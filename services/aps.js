@@ -1,26 +1,26 @@
 const { SdkManagerBuilder } = require('@aps_sdk/autodesk-sdkmanager');
 const { AuthenticationClient, Scopes, ResponseType } = require('@aps_sdk/authentication');
 const { DataManagementClient } = require('@aps_sdk/data-management');
-const { AdminClient, Platform  } = require('@aps_sdk/account-admin');
+const { AdminClient } = require('@aps_sdk/account-admin');
 
 const { APS_CLIENT_ID, APS_CLIENT_SECRET, APS_CALLBACK_URL } = require('../config.js');
 
 const service = module.exports = {};
 
-const sdk = SdkManagerBuilder.Create().build();
+const sdk = SdkManagerBuilder.create().build();
 const authenticationClient = new AuthenticationClient(sdk);
 const dataManagementClient = new DataManagementClient(sdk);
 const adminClient = new AdminClient(sdk);
 
 
 service.getAuthorizationUrl = () => authenticationClient.authorize(APS_CLIENT_ID, ResponseType.Code, APS_CALLBACK_URL, [
-    Scopes.Dataread,
-    Scopes.Accountread,
-    Scopes.Accountwrite
+    Scopes.DataRead,
+    Scopes.AccountRead,
+    Scopes.AccountWrite
 ]);
 
 service.authCallbackMiddleware = async (req, res, next) => {
-    const credentials = await authenticationClient.getThreeLeggedTokenAsync(APS_CLIENT_ID, APS_CLIENT_SECRET, req.query.code, APS_CALLBACK_URL);
+    const credentials = await authenticationClient.getThreeLeggedToken(APS_CLIENT_ID, req.query.code, APS_CALLBACK_URL,{clientSecret:APS_CLIENT_SECRET});
     req.session.token = credentials.access_token;
     req.session.refresh_token = credentials.refresh_token;
     req.session.expires_at = Date.now() + credentials.expires_in * 1000;
@@ -35,11 +35,14 @@ service.authRefreshMiddleware = async (req, res, next) => {
     }
 
     if (expires_at < Date.now()) {
-        const credentials = await authenticationClient.getRefreshTokenAsync(APS_CLIENT_ID, APS_CLIENT_SECRET, refresh_token, [
-            Scopes.Dataread,
-            Scopes.Accountread,
-            Scopes.Accountwrite
-        ]);
+        const credentials = await authenticationClient.getRefreshToken(APS_CLIENT_ID, refresh_token, {
+            clientSecret: APS_CLIENT_SECRET,
+            scopes: [
+                Scopes.DataRead,
+                Scopes.AccountRead,
+                Scopes.AccountWrite
+            ]
+        });
         req.session.token = credentials.access_token;
         req.session.refresh_token = credentials.refresh_token;
         req.session.expires_at = Date.now() + credentials.expires_in * 1000;
@@ -52,20 +55,20 @@ service.authRefreshMiddleware = async (req, res, next) => {
 };
 
 service.getUserProfile = async (token) => {
-    const resp = await authenticationClient.getUserinfoAsync(token.access_token);
+    const resp = await authenticationClient.getUserInfo(token.access_token);
     return resp;
 };
 
 // Data Management APIs
 service.getHubs = async (token) => {
-    const resp = await dataManagementClient.GetHubsAsync(token.access_token);
+    const resp = await dataManagementClient.getHubs(token.access_token);
     return resp.data.filter((item)=>{
         return item.id.startsWith('b.');
     })
 };
 
 service.getProjects = async (hubId, token) => {
-    const resp = await dataManagementClient.GetHubProjectsAsync(token.access_token, hubId);
+    const resp = await dataManagementClient.getHubProjects(token.access_token, hubId);
     return resp.data.filter( (item)=>{
         return item.attributes.extension.data.projectType == 'ACC';
     } )
@@ -77,7 +80,7 @@ service.getProjectsACC = async (accountId, token) => {
     let offset = 0;
     let totalResults = 0;
     do {
-        const resp = await adminClient.getProjectsAsync(token, accountId, null, null, null, null, null, null, null, null, null, null, null, null, null, null, offset);
+        const resp = await adminClient.getProjects(token, accountId, {offset:offset});
         allProjects = allProjects.concat(resp.results);
         offset += resp.pagination.limit;
         totalResults = resp.pagination.totalResults;
@@ -86,13 +89,13 @@ service.getProjectsACC = async (accountId, token) => {
 };
 
 service.createProjectACC = async (accountId, projectInfo, token) =>{
-    const resp = await adminClient.createProjectAsync( token, accountId, projectInfo );
+    const resp = await adminClient.createProject( token, accountId, projectInfo );
     return resp;
 }
 
 service.getProjectACC = async (projectId, token) => {
     let projectsList = [];
-    const resp = await adminClient.getProjectAsync( token, projectId );
+    const resp = await adminClient.getProject( token, projectId );
     projectsList.push(resp);
     return projectsList;
 };
@@ -102,7 +105,7 @@ service.getProjectUsersACC = async (projectId, token) => {
     let offset = 0;
     let totalResults = 0;
     do{
-        const resp = await adminClient.getProjectUsersAsync( token, projectId, null, null, null, null, null, null, null, null, null, null,null,null,null,null,null,null,null,offset );
+        const resp = await adminClient.getProjectUsers( token, projectId, {offset:offset});
         allUsers = allUsers.concat(resp.results);
         offset += resp.pagination.limit;
         totalResults = resp.pagination.totalResults;
@@ -121,11 +124,11 @@ service.addProjectAdminACC = async (projectId, email, token) => {
             "access": "administrator"
         }]
     }
-    const resp = await adminClient.assignProjectUserAsync( token, projectId, userBody );
+    const resp = await adminClient.assignProjectUser( token, projectId, userBody );
     return resp;
 }
 
 service.importProjectUsersACC = async (projectId, projectUsers, token) => {
-    const resp = await adminClient.importProjectUsersAsync( token, projectId, projectUsers )
+    const resp = await adminClient.importProjectUsers( token, projectId, projectUsers )
     return resp;
 }
