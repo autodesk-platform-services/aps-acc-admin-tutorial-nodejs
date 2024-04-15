@@ -1,6 +1,6 @@
-name,addressLine1,addressLine2,city,constructionType,contractType,country,currentPhase,deliveryMethod,jobNumber,platform,postalCode,startDate,stateOrProvince,timezone,classification,type,template
-Sample Project - 001,The Fifth Avenue,U301,NewYork,Renovation,Design-Bid,US,,Design-Bid,0219-01,acc,10011,2017-05-02,NY,America/New_York,production,Commercial,
-Sample Project - 002,The Fifth Avenue,U301,NewYork,Renovation,Design-Bid,US,,Design-Bid,0219-01,acc,10011,2017-05-02,NY,America/New_York,production,Commercial,
-Sample Project - 003,The Fifth Avenue,U301,NewYork,Renovation,Design-Bid,US,,Design-Bid,0219-01,acc,10011,2017-05-02,NY,America/New_York,production,Commercial,
-Sample Project - 004,The Fifth Avenue,U301,NewYork,Renovation,Design-Bid,US,,Design-Bid,0219-01,acc,10011,2017-05-02,NY,America/New_York,production,Commercial,
-Sample Project - 005,The Fifth Avenue,U301,NewYork,Renovation,Design-Bid,US,,Design-Bid,0219-01,acc,10011,2017-05-02,NY,America/New_York,production,Commercial,
+name,addressLine1,addressLine2,city,constructionType,contractType,country,currentPhase,deliveryMethod,jobNumber,postalCode,startDate,stateOrProvince,timezone,classification,type,template
+Sample Project - 001,The Fifth Avenue,U301,NewYork,Renovation,Design-Bid,US,,Design-Bid,0219-01,10011,2017-05-02,NY,America/New_York,production,Commercial,
+Sample Project - 002,The Fifth Avenue,U301,NewYork,Renovation,Design-Bid,US,,Design-Bid,0219-01,10011,2017-05-02,NY,America/New_York,production,Commercial,
+Sample Project - 003,The Fifth Avenue,U301,NewYork,Renovation,Design-Bid,US,,Design-Bid,0219-01,10011,2017-05-02,NY,America/New_York,production,Commercial,
+Sample Project - 004,The Fifth Avenue,U301,NewYork,Renovation,Design-Bid,US,,Design-Bid,0219-01,10011,2017-05-02,NY,America/New_York,production,Commercial,
+Sample Project - 005,The Fifth Avenue,U301,NewYork,Renovation,Design-Bid,US,,Design-Bid,0219-01,10011,2017-05-02,NY,America/New_York,production,Commercial,
