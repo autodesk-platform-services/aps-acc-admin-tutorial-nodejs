@@ -17,9 +17,11 @@ router.get('/api/admin/projects', async function(req, res, next){
 });
 
 router.get('/api/admin/project', async function(req, res, next){
+    let projectsList = [];
     try {
         const projectInfo = await getProjectACC( req.query.projectId, req.oAuthToken.access_token);
-        res.json(projectInfo);
+        projectsList.push(projectInfo);
+        res.json(projectsList);
     } catch (err) {
         next(err);
     }
@@ -33,12 +35,19 @@ router.post('/api/admin/projects', bodyParser.json(), async function (req, res, 
     await Promise.all(
         projects.map(async (project) => {
             try{
-                const projectInfo = await createProjectACC(accountId, project, req.oAuthToken.access_token);
+                let projectInfo = await createProjectACC(accountId, project, req.oAuthToken.access_token);
                 projectsCreated.push(projectInfo.name);
+                while( projectInfo.status != "active" ){
+                    function delay(time) {
+                        return new Promise(resolve => setTimeout(resolve, time));
+                    }
+                    await delay(1000);    
+                    projectInfo = await getProjectACC( projectInfo.id, req.oAuthToken.access_token);
+                }
                 const profile = await getUserProfile(req.oAuthToken);
                 await addProjectAdminACC( projectInfo.id, profile.email, req.oAuthToken.access_token )
             }catch(err){
-                console.warn("Failed to create project for: "+ project.name + "due to: "+ err )
+                console.warn("Failed to create project for: "+ project.name + " due to: "+ err.message )
                 projectsFailed.push( project.name )
             }
         })
