@@ -94,8 +94,8 @@ service.createProjectACC = async (accountId, projectInfo, token) =>{
 }
 
 service.getProjectACC = async (projectId, token) => {
-    const projectInfo = await adminClient.getProject( token, projectId );
-    return projectInfo;
+    const resp = await adminClient.getProject( token, projectId );
+    return resp;
 };
 
 service.getProjectUsersACC = async (projectId, token) => {
