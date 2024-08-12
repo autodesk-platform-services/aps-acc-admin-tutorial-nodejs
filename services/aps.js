@@ -1,7 +1,7 @@
 const { SdkManagerBuilder } = require('@aps_sdk/autodesk-sdkmanager');
 const { AuthenticationClient, Scopes, ResponseType } = require('@aps_sdk/authentication');
 const { DataManagementClient } = require('@aps_sdk/data-management');
-const { AdminClient } = require('@aps_sdk/account-admin');
+const { AdminClient } = require('@aps_sdk/construction-account-admin');
 
 const { APS_CLIENT_ID, APS_CLIENT_SECRET, APS_CALLBACK_URL } = require('../config.js');
 
