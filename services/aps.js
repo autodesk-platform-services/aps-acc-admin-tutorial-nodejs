@@ -20,7 +20,7 @@ service.getAuthorizationUrl = () => authenticationClient.authorize(APS_CLIENT_ID
 ]);
 
 service.authCallbackMiddleware = async (req, res, next) => {
-    const credentials = await authenticationClient.getThreeLeggedToken(APS_CLIENT_ID, req.query.code, APS_CALLBACK_URL,{clientSecret:APS_CLIENT_SECRET});
+    const credentials = await authenticationClient.getThreeLeggedToken(APS_CLIENT_ID, req.query.code, APS_CALLBACK_URL, { clientSecret: APS_CLIENT_SECRET });
     req.session.token = credentials.access_token;
     req.session.refresh_token = credentials.refresh_token;
     req.session.expires_at = Date.now() + credentials.expires_in * 1000;
@@ -35,7 +35,7 @@ service.authRefreshMiddleware = async (req, res, next) => {
     }
 
     if (expires_at < Date.now()) {
-        const credentials = await authenticationClient.getRefreshToken(APS_CLIENT_ID, refresh_token, {
+        const credentials = await authenticationClient.refreshToken(refresh_token, APS_CLIENT_ID, {
             clientSecret: APS_CLIENT_SECRET,
             scopes: [
                 Scopes.DataRead,
@@ -62,16 +62,16 @@ service.getUserProfile = async (token) => {
 // Data Management APIs
 service.getHubs = async (token) => {
     const resp = await dataManagementClient.getHubs(token.access_token);
-    return resp.data.filter((item)=>{
+    return resp.data.filter((item) => {
         return item.id.startsWith('b.');
     })
 };
 
 service.getProjects = async (hubId, token) => {
     const resp = await dataManagementClient.getHubProjects(token.access_token, hubId);
-    return resp.data.filter( (item)=>{
+    return resp.data.filter((item) => {
         return item.attributes.extension.data.projectType == 'ACC';
-    } )
+    })
 };
 
 // ACC Admin APIs
@@ -80,7 +80,11 @@ service.getProjectsACC = async (accountId, token) => {
     let offset = 0;
     let totalResults = 0;
     do {
-        const resp = await adminClient.getProjects(token, accountId, {offset:offset});
+        const resp = await adminClient.getProjects(accountId, {
+            accessToken: token,
+            offset: offset
+        });
+
         allProjects = allProjects.concat(resp.results);
         offset += resp.pagination.limit;
         totalResults = resp.pagination.totalResults;
@@ -88,13 +92,19 @@ service.getProjectsACC = async (accountId, token) => {
     return allProjects;
 };
 
-service.createProjectACC = async (accountId, projectInfo, token) =>{
-    const resp = await adminClient.createProject( token, accountId, projectInfo );
+service.createProjectACC = async (accountId, projectInfo, token) => {
+    const resp = await adminClient.createProject(accountId, projectInfo, {
+        accessToken: token,  // Optionally pass access token
+        //region: 'US'       // Optionally pass region if needed
+    });
     return resp;
 }
 
 service.getProjectACC = async (projectId, token) => {
-    const resp = await adminClient.getProject( token, projectId );
+    const resp = await adminClient.getProject(projectId, {
+        accessToken: token,  // Optionally pass access token
+        //region: 'US'       // Optionally pass region if needed
+    });
     return resp;
 };
 
@@ -102,12 +112,25 @@ service.getProjectUsersACC = async (projectId, token) => {
     let allUsers = [];
     let offset = 0;
     let totalResults = 0;
-    do{
-        const resp = await adminClient.getProjectUsers( token, projectId, {offset:offset});
+    do {
+        const resp = await adminClient.getProjectUsers(projectId, {
+            accessToken: token,  // Optionally pass access token
+            //region: 'US',              // Optionally specify region
+            //filterName: 'John Doe',     // Optionally filter users by name
+            //filterEmail: 'john.doe@example.com', // Optionally filter by email
+            //filterStatus: ['active'],   // Optionally filter by user status
+            //filterAccessLevels: ['admin', 'viewer'], // Optionally filter by access levels
+            //limit: 50,                  // Optionally limit the number of results
+            offset: offset,                  // Optionally specify offset for pagination
+            //fields: ['name', 'email', 'role'], // Optionally specify which fields to return
+            //sort: ['name'],             // Optionally sort the users by specified fields
+            //options: { timeout: 5000 }
+        });
+
         allUsers = allUsers.concat(resp.results);
         offset += resp.pagination.limit;
         totalResults = resp.pagination.totalResults;
-    }while (offset < totalResults) 
+    } while (offset < totalResults)
     return allUsers;
 };
 
@@ -122,11 +145,17 @@ service.addProjectAdminACC = async (projectId, email, token) => {
             "access": "administrator"
         }]
     }
-    const resp = await adminClient.assignProjectUser( token, projectId, userBody );
+    const resp = await adminClient.assignProjectUser(projectId, userBody, {
+        accessToken: token,  // Optionally pass access token
+        //region: 'US'
+    });
     return resp;
 }
 
 service.importProjectUsersACC = async (projectId, projectUsers, token) => {
-    const resp = await adminClient.importProjectUsers( token, projectId, projectUsers )
+    const resp = await adminClient.importProjectUsers(projectId, projectUsers, {
+        accessToken: token,  // Optionally pass access token
+        //region: 'US'
+    });
     return resp;
 }
