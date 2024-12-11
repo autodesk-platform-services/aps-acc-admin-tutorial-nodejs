@@ -61,14 +61,14 @@ service.getUserProfile = async (token) => {
 
 // Data Management APIs
 service.getHubs = async (token) => {
-    const resp = await dataManagementClient.getHubs(token.access_token);
+    const resp = await dataManagementClient.getHubs({ accessToken: token.access_token });
     return resp.data.filter((item)=>{
         return item.id.startsWith('b.');
     })
 };
 
 service.getProjects = async (hubId, token) => {
-    const resp = await dataManagementClient.getHubProjects(token.access_token, hubId);
+    const resp = await dataManagementClient.getHubProjects(hubId, { accessToken: token.access_token});
     return resp.data.filter( (item)=>{
         return item.attributes.extension.data.projectType == 'ACC';
     } )
@@ -80,7 +80,7 @@ service.getProjectsACC = async (accountId, token) => {
     let offset = 0;
     let totalResults = 0;
     do {
-        const resp = await adminClient.getProjects(token, accountId, {offset:offset});
+        const resp = await adminClient.getProjects(accountId, { offset: offset, accessToken: token });
         allProjects = allProjects.concat(resp.results);
         offset += resp.pagination.limit;
         totalResults = resp.pagination.totalResults;
@@ -89,12 +89,12 @@ service.getProjectsACC = async (accountId, token) => {
 };
 
 service.createProjectACC = async (accountId, projectInfo, token) =>{
-    const resp = await adminClient.createProject( token, accountId, projectInfo );
+    const resp = await adminClient.createProject(accountId, projectInfo, { accessToken: token});
     return resp;
 }
 
 service.getProjectACC = async (projectId, token) => {
-    const resp = await adminClient.getProject( token, projectId );
+    const resp = await adminClient.getProject(projectId, { accessToken: token });
     return resp;
 };
 
@@ -103,7 +103,7 @@ service.getProjectUsersACC = async (projectId, token) => {
     let offset = 0;
     let totalResults = 0;
     do{
-        const resp = await adminClient.getProjectUsers( token, projectId, {offset:offset});
+        const resp = await adminClient.getProjectUsers(projectId, { offset: offset, accessToken: token });
         allUsers = allUsers.concat(resp.results);
         offset += resp.pagination.limit;
         totalResults = resp.pagination.totalResults;
@@ -122,11 +122,11 @@ service.addProjectAdminACC = async (projectId, email, token) => {
             "access": "administrator"
         }]
     }
-    const resp = await adminClient.assignProjectUser( token, projectId, userBody );
+    const resp = await adminClient.assignProjectUser(projectId, userBody, { accessToken: token });
     return resp;
 }
 
 service.importProjectUsersACC = async (projectId, projectUsers, token) => {
-    const resp = await adminClient.importProjectUsers( token, projectId, projectUsers )
+    const resp = await adminClient.importProjectUsers(projectId, projectUsers, { accessToken: token });
     return resp;
 }
