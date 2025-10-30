@@ -11,11 +11,10 @@
   "license": "MIT",
   "dependencies": {
     "@aps_sdk/authentication": "^1.0.0",
-    "@aps_sdk/autodesk-sdkmanager": "^1.0.0",
-    "@aps_sdk/construction-account-admin": "^1.0.0",
-    "@aps_sdk/data-management": "^1.0.0",
-    "cookie-session": "^2.1.0",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2"
+    "@aps_sdk/construction-account-admin": "^1.2.1",
+    "@aps_sdk/data-management": "^1.1.2",
+    "cookie-session": "^2.1.1",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0"
   }
 }

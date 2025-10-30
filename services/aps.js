@@ -35,7 +35,7 @@ service.authRefreshMiddleware = async (req, res, next) => {
     }
 
     if (expires_at < Date.now()) {
-        const credentials = await authenticationClient.getRefreshToken(APS_CLIENT_ID, refresh_token, {
+        const credentials = await authenticationClient.refreshToken(refresh_token, APS_CLIENT_ID, {
             clientSecret: APS_CLIENT_SECRET,
             scopes: [
                 Scopes.DataRead,
