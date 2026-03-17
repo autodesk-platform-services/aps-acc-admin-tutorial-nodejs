@@ -1,7 +1,7 @@
 {
   "name": "aps-acc-admin-tutorial",
   "version": "1.0.0",
-  "description": "Autodesk Platform Services application built by following the ACC Admin tutorial from https://aps.autodesk.com/tutorials.",
+  "description": "Autodesk Platform Services application built by following the Forma Admin tutorial from https://aps.autodesk.com/tutorials.",
   "scripts": {
     "start": "node server.js"
   },
