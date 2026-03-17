@@ -6,7 +6,7 @@
 [![license](https://img.shields.io/:license-mit-green.svg)](https://opensource.org/licenses/MIT)
 
 [Autodesk Platform Services](https://aps.autodesk.com) application built by following
-the [Forma Administrator](https://tutorials.autodesk.io/tutorials/acc-admin/) tutorial
+the [Forma Administrator](https://tutorials.autodesk.io/tutorials/acc-admin) tutorial
 from https://tutorials.autodesk.io.
 
 ![thumbnail](thumbnail.png)
