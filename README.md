@@ -1,4 +1,4 @@
-# ACC Admin Tutorial (Node.js)
+# Forma Admin Tutorial (Node.js)
 
 ![platforms](https://img.shields.io/badge/platform-windows%20%7C%20osx%20%7C%20linux-lightgray.svg)
 [![node.js](https://img.shields.io/badge/Node.js-20.10-blue.svg)](https://nodejs.org)
@@ -6,7 +6,7 @@
 [![license](https://img.shields.io/:license-mit-green.svg)](https://opensource.org/licenses/MIT)
 
 [Autodesk Platform Services](https://aps.autodesk.com) application built by following
-the [ACC Administractor](https://tutorials.autodesk.io/tutorials/acc-admin/) tutorial
+the [Forma Administrator](https://tutorials.autodesk.io/tutorials/acc-admin) tutorial
 from https://tutorials.autodesk.io.
 
 ![thumbnail](thumbnail.png)
@@ -16,8 +16,8 @@ from https://tutorials.autodesk.io.
 ### Prerequisites
 
 - [APS credentials](https://aps.autodesk.com/en/docs/oauth/v2/tutorials/create-app)
-- [Autodesk Construction Cloud](https://fieldofviewblog.wordpress.com/2017/08/31/bim-360-acc-account-for-development/)
-- Provisioned access to [Autodesk Construction Cloud](https://tutorials.autodesk.io/#provision-access-in-other-products)
+- [Autodesk Forma](https://fieldofviewblog.wordpress.com/2017/08/31/bim-360-acc-account-for-development/)
+- Provisioned access to [Autodesk Forma](https://tutorials.autodesk.io/#provision-access-in-other-products)
 - [Node.js](https://nodejs.org) (Long Term Support version is recommended)
 - Command-line terminal such as [PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/overview)
 or [bash](https://en.wikipedia.org/wiki/Bash_(Unix_shell)) (should already be available on your system)
